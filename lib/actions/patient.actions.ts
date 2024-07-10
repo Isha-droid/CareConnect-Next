@@ -1,12 +1,11 @@
 import { ID, Query } from "node-appwrite";
 import { users } from "../appwrite.config";
+import { UserRoundIcon } from "lucide-react";
 
 
 
 export const createUser = async (user: CreateUserParams) => {
     try {
-        // Attempt to create the user using Appwrite API
-        // Replace with your actual user creation logic with Appwrite
         const createdUser = await users.create(ID.unique(),user.email, user.phone, undefined, user.name);
 
     
@@ -30,5 +29,16 @@ export const createUser = async (user: CreateUserParams) => {
             console.error("Error creating user:", error);
             throw error; // Throw original error for further handling
         }
+    }
+};
+
+export const getUser = async (userId: string) => {
+    try {
+        const user = await users.get(userId); // Assuming users is your Appwrite service instance
+        console.log(user); // Logging the retrieved user data
+        return user; // Returning the user object
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        throw error; // Rethrow the error or handle as needed in your application
     }
 };

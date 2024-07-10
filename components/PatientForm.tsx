@@ -40,7 +40,7 @@ export default function App() {
       toast.success('user registered successfully!'); // Displays a success message
 
       
-      // router.push(`/patients/${user.$id}/register`);
+      router.push(`/patients/${user.$id}/register`);
     } catch (error) {
       console.error("Error creating user:", error);
     }
