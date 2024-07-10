@@ -3,6 +3,8 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "react-hot-toast";
+
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -33,6 +35,8 @@ export default function RootLayout({
             "min-h-screen bg-dark-300 font-sans antialiased"
           )}
         >
+        <Toaster position="bottom-center" />
+
           {children}
         </body>
       </ThemeProvider>
