@@ -1,68 +1,62 @@
-"use client"
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+"use client";
+import React from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 
-const schema = z.object({
-  name: z.string().nonempty({ message: "Name is required" }),
-  age: z.number().min(0, { message: "Age must be a positive number" }),
-  address: z.string().nonempty({ message: "Address is required" }),
-});
-
-type PatientFormValues = z.infer<typeof schema>;
-
-const PatientForm: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<PatientFormValues>({
-    resolver: zodResolver(schema),
-  });
-
-  const onSubmit = (data: PatientFormValues) => {
-    console.log(data);
-    console.log("form submitted")
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-lg mx-auto bg-gray-800 p-6 rounded-lg shadow-md">
-      <div className="mb-4">
-        <label htmlFor="name" className="block text-sm font-medium text-gray-300">Name</label>
-        <input
-          id="name"
-          {...register("name")}
-          className="mt-1 p-2 block w-full bg-gray-700 text-white rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
-      </div>
-
-      <div className="mb-4">
-        <label htmlFor="age" className="block text-sm font-medium text-gray-300">Age</label>
-        <input
-          id="age"
-          type="number"
-          {...register("age")}
-          className="mt-1 p-2 block w-full bg-gray-700 text-white rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-        {errors.age && <p className="mt-1 text-sm text-red-600">{errors.age.message}</p>}
-      </div>
-
-      <div className="mb-4">
-        <label htmlFor="address" className="block text-sm font-medium text-gray-300">Address</label>
-        <input
-          id="address"
-          {...register("address")}
-          className="mt-1 p-2 block w-full bg-gray-700 text-white rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        />
-        {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>}
-      </div>
-
-      <button
-        type="submit"
-        className="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >
-        Submit
-      </button>
-    </form>
-  );
+type FormValues = {
+  firstName: string;
+  lastName: string;
+  email: string;
 };
 
-export default PatientForm;
+export default function App() {
+  const { register, handleSubmit } = useForm<FormValues>();
+  const onSubmit: SubmitHandler<FormValues> = (data) => console.log(data);
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-xl w-full"
+      >
+        <h2 className="text-2xl font-bold text-white mb-6">Sign Up</h2>
+        <div className="mb-4">
+          <label className="block text-gray-400 text-sm mb-2" htmlFor="firstName">
+            First Name
+          </label>
+          <input
+            {...register("firstName")}
+            id="firstName"
+            className="w-full p-2 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:border-pink-500"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-400 text-sm mb-2" htmlFor="lastName">
+            Last Name
+          </label>
+          <input
+            {...register("lastName")}
+            id="lastName"
+            className="w-full p-2 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:border-pink-500"
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-400 text-sm mb-2" htmlFor="email">
+            Email
+          </label>
+          <input
+            type="email"
+            {...register("email")}
+            id="email"
+            className="w-full p-2 bg-gray-700 text-white border border-gray-600 rounded focus:outline-none focus:border-pink-500"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  );
+}
