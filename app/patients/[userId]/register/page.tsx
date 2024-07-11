@@ -17,12 +17,13 @@ const Register = ({ params: { userId } }: SearchParamProps) => {
   }, [userId]);
 
   if (!user) return <div>Loading...</div>;
-  console.log(user);
 
   return (
-    <div className="flex items-center justify-center min-h-screen w-full bg-gray-900">
-      <div className="flex flex-col items-center w-3/4 max-w-4xl p-6 space-y-6 bg-gray-800 rounded-lg shadow-lg">
-        <Image src="/assets/icons/logo-full.svg" height={1000} width={1000} alt="careplus" className="h-10 w-auto mb-12" />
+    <div className="relative min-h-screen bg-gray-900 flex flex-col items-center justify-center">
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 m-5">
+        <Image src="/assets/icons/logo-full.svg" height={50} width={150} alt="careplus" className="p-2 rounded-lg shadow-lg" />
+      </div>
+      <div className="flex flex-col items-center w-full max-w-4xl p-6 space-y-6">
         <RegisterForm user={user} />
       </div>
     </div>

@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 const schema = z.object({
   email: z.string().email({ message: 'Invalid email address' }).min(1, { message: 'Email is required' }),
   phone: z.string().min(1, { message: 'Phone number is required' }),
-  userId: z.string().min(1, { message: 'User ID is required' }),
   name: z.string().min(1, { message: 'Name is required' }),
   privacyConsent: z.boolean().refine(value => value === true, { message: 'Privacy consent is required' }),
   gender: z.enum(['male', 'female', 'other']),
@@ -29,7 +28,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-const RegisterForm = () => {
+const RegisterForm = ({user: any}) => {
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
@@ -56,19 +55,13 @@ const RegisterForm = () => {
           {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>}
         </div>
 
-        <div className="mb-4">
-          <label htmlFor="userId" className="block text-gray-400 text-sm mb-2">User ID</label>
-          <input type="text" id="userId" {...register('userId')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500" />
-          {errors.userId && <p className="text-red-500 text-sm mt-1">{errors.userId.message}</p>}
-        </div>
+        
 
         <div className="mb-4">
           <label htmlFor="name" className="block text-gray-400 text-sm mb-2">Name</label>
           <input type="text" id="name" {...register('name')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500" />
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
         </div>
-
-        
 
         <div className="mb-4">
           <label htmlFor="gender" className="block text-gray-400 text-sm mb-2">Gender</label>
@@ -109,7 +102,11 @@ const RegisterForm = () => {
           <input type="text" id="emergencyContactNumber" {...register('emergencyContactNumber')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500" />
           {errors.emergencyContactNumber && <p className="text-red-500 text-sm mt-1">{errors.emergencyContactNumber.message}</p>}
         </div>
+      </div>
 
+      {/* Medical Information */}
+      <h3 className="text-white text-lg font-semibold mb-4 mt-8">Medical Information</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="mb-4">
           <label htmlFor="insuranceProvider" className="block text-gray-400 text-sm mb-2">Insurance Provider</label>
           <input type="text" id="insuranceProvider" {...register('insuranceProvider')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500" />
@@ -123,13 +120,13 @@ const RegisterForm = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="allergies" className="block text-gray-400 text-sm mb-2">Allergies Information</label>
+          <label htmlFor="allergies" className="block text-gray-400 text-sm mb-2">Allergies</label>
           <textarea id="allergies" {...register('allergies')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500" />
           {errors.allergies && <p className="text-red-500 text-sm mt-1">{errors.allergies.message}</p>}
         </div>
 
         <div className="mb-4">
-          <label htmlFor="currentMedication" className="block text-gray-400 text-sm mb-2">Current Medication Information</label>
+          <label htmlFor="currentMedication" className="block text-gray-400 text-sm mb-2">Current Medication</label>
           <textarea id="currentMedication" {...register('currentMedication')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500" />
           {errors.currentMedication && <p className="text-red-500 text-sm mt-1">{errors.currentMedication.message}</p>}
         </div>
@@ -145,7 +142,11 @@ const RegisterForm = () => {
           <textarea id="pastMedicalHistory" {...register('pastMedicalHistory')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500" />
           {errors.pastMedicalHistory && <p className="text-red-500 text-sm mt-1">{errors.pastMedicalHistory.message}</p>}
         </div>
+      </div>
 
+      {/* Identification and Verification */}
+      <h3 className="text-white text-lg font-semibold mb-4 mt-8">Identification and Verification</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="mb-4">
           <label htmlFor="identificationType" className="block text-gray-400 text-sm mb-2">Identification Type</label>
           <select id="identificationType" {...register('identificationType')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500">
@@ -174,18 +175,16 @@ const RegisterForm = () => {
           {errors.primaryPhysician && <p className="text-red-500 text-sm mt-1">{errors.primaryPhysician.message}</p>}
         </div>
       </div>
+
       <div className="mb-4">
-        <label htmlFor="privacyConsent" className="block text-gray-400 text-sm mb-2">Privacy Consent</label>
-        <div className="flex items-start space-x-4">
-          <input type="checkbox" id="privacyConsent" {...register('privacyConsent')} className="text-pink-500 rounded focus:ring-pink-500" />
-          <label htmlFor="privacyConsent" className="text-gray-300 leading-tight">
-            I agree to the privacy policy, including the use of my personal information as described.
-          </label>
-          {errors.privacyConsent && <p className="text-red-500 text-sm mt-1">{errors.privacyConsent.message}</p>}
+        <div className="flex items-center">
+          <input type="checkbox" id="privacyConsent" {...register('privacyConsent')} className="mr-2 cursor-pointer border border-gray-400 focus:outline-none rounded h-5 w-5 bg-gray-700 text-pink-500" />
+          <label htmlFor="privacyConsent" className="text-gray-400 text-sm">I agree to the privacy policy, including the use of my personal information as described.</label>
         </div>
+        {errors.privacyConsent && <p className="text-red-500 text-sm mt-1">{errors.privacyConsent.message}</p>}
       </div>
 
-      <button type="submit" className="bg-pink-500 text-white py-2 px-4 rounded hover:bg-pink-600 focus:outline-none focus:bg-pink-600">Submit</button>
+      <button type="submit" className="bg-pink-500 text-white py-2 px-4 rounded hover:bg-pink-600 focus:outline-none focus:bg-pink-600 ">Submit</button>
     </form>
   );
 };
