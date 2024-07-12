@@ -1,7 +1,9 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm , Controller} from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FileUploader } from './FileUpload';
+import CustomFormField from '../CustomFormField';
 
 const schema = z.object({
   email: z.string().email({ message: 'Invalid email address' }).min(1, { message: 'Email is required' }),
@@ -24,12 +26,14 @@ const schema = z.object({
   identificationNo: z.string().min(1, { message: 'Identification number is required' }),
   identificationDocumentId: z.string().min(1, { message: 'Identification document ID is required' }),
   primaryPhysician: z.string().min(1, { message: 'Primary physician information is required' }),
+  identificationDocument: z.any().refine(files => files && files.length > 0, {
+    message: 'Scanned copy of identification document is required'}),
 });
 
-type FormValues = z.infer<typeof schema>;
+
 
 const RegisterForm = ({user: any}) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { control,register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
 
@@ -64,14 +68,41 @@ const RegisterForm = ({user: any}) => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="gender" className="block text-gray-400 text-sm mb-2">Gender</label>
-          <select id="gender" {...register('gender')} className="w-full p-2 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none focus:border-pink-500">
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-          {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>}
+        <label className="block text-gray-400 text-sm mb-2">Gender</label>
+        <div className="flex items-center mb-2 space-x-4">
+          <div className="flex items-center">
+            <input
+              type="radio"
+              id="male"
+              value="male"
+              {...register('gender')}
+              className="mr-2"
+            />
+            <label htmlFor="male" className="text-white">Male</label>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="radio"
+              id="female"
+              value="female"
+              {...register('gender')}
+              className="mr-2"
+            />
+            <label htmlFor="female" className="text-white">Female</label>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="radio"
+              id="other"
+              value="other"
+              {...register('gender')}
+              className="mr-2"
+            />
+            <label htmlFor="other" className="text-white">Other</label>
+          </div>
         </div>
+        {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>}
+      </div>
 
         <div className="mb-4">
           <label htmlFor="birthDate" className="block text-gray-400 text-sm mb-2">Birth Date</label>
@@ -175,6 +206,29 @@ const RegisterForm = ({user: any}) => {
           {errors.primaryPhysician && <p className="text-red-500 text-sm mt-1">{errors.primaryPhysician.message}</p>}
         </div>
       </div>
+
+      <Controller
+        name="identificationDocument"
+        control={control}
+        render={({ field }) => (
+          <CustomFormField
+            fieldType="file"
+            control={control}
+            name="identificationDocument"
+            label="Scanned Copy of Identification Document"
+            renderSkeleton={() => (
+              <div>
+                <FileUploader files={field.value} onChange={field.onChange} />
+                {errors.identificationDocument && (
+                  <p className="text-red-500 text-sm mt-1">{errors.identificationDocument.message}</p>
+                )}
+              </div>
+            )}
+          />
+        )}
+      />
+      
+      
 
       <div className="mb-4">
         <div className="flex items-center">

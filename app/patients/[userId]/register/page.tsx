@@ -1,31 +1,41 @@
-"use client";
-import RegisterForm from '@/components/forms/RegisterForm';
-import { getUser } from '@/lib/actions/patient.actions';
-import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+"use client"
+import Image from "next/image";
+import { redirect } from "next/navigation";
 
-const Register = ({ params: { userId } }: SearchParamProps) => {
-  const [user, setUser] = useState<User | null>(null);
+import RegisterForm from "@/components/forms/RegisterForm";
+import { getUser } from "@/lib/actions/patient.actions";
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const fetchedUser = await getUser(userId);
-      setUser(fetchedUser);
-    };
+const Register = async ({ params: { userId } }: SearchParamProps) => {
+  const user = await getUser(userId);
+  // const patient = await getPatient(userId);
 
-    fetchUser();
-  }, [userId]);
-
-  if (!user) return <div>Loading...</div>;
+  // if (patient) redirect(`/patients/${userId}/new-appointment`);
 
   return (
-    <div className="relative min-h-screen bg-gray-900 flex flex-col items-center justify-center">
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 m-5">
-        <Image src="/assets/icons/logo-full.svg" height={50} width={150} alt="careplus" className="p-2 rounded-lg shadow-lg" />
-      </div>
-      <div className="flex flex-col items-center w-full max-w-4xl p-6 space-y-6">
-        <RegisterForm user={user} />
-      </div>
+    <div className="flex h-screen max-h-screen">
+      <section className="remove-scrollbar container">
+        <div className="sub-container max-w-[860px] flex-1 flex-col py-10">
+          <Image
+            src="/assets/icons/logo-full.svg"
+            height={1000}
+            width={1000}
+            alt="patient"
+            className="mb-12 h-10 w-fit"
+          />
+
+          <RegisterForm user={user} />
+
+          <p className="copyright py-12">© 2024 CarePluse</p>
+        </div>
+      </section>
+
+      <Image
+        src="/assets/images/register-img.png"
+        height={1000}
+        width={1000}
+        alt="patient"
+        className="side-img max-w-[390px]"
+      />
     </div>
   );
 };
