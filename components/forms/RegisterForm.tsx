@@ -1,9 +1,14 @@
-import React from 'react';
+"use client"
+import React, { useState } from 'react';
 import { useForm , Controller} from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FileUploader } from './FileUpload';
 import CustomFormField from '../CustomFormField';
+import { useRouter } from 'next/navigation';
+import { savePatientData } from '@/lib/actions/patient.actions';
+import { IPatientRegister } from "@/models/PatientRegister"; // Adjust the path as per your project structure
+import { toast } from 'react-hot-toast';
 
 const schema = z.object({
   email: z.string().email({ message: 'Invalid email address' }).min(1, { message: 'Email is required' }),
@@ -32,15 +37,101 @@ const schema = z.object({
 
 
 
-const RegisterForm = ({user: any}) => {
+const RegisterForm = ({ user }: { user: User }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
   const { control,register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+    },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
-    // Add your submission logic here
+  interface FormValues {
+    email: string;
+    phone: string;
+    name: string;
+    privacyConsent: boolean;
+    gender: 'male' | 'female' | 'other';
+    birthDate: string;
+    address: string;
+    occupation: string;
+    emergencyContactName: string;
+    emergencyContactNumber: string;
+    insuranceProvider: string;
+    insurancePolicyNumber: string;
+    allergies: string;
+    currentMedication: string;
+    familyMedicalHistory: string;
+    pastMedicalHistory: string;
+    identificationType: 'passport' | 'drivingLicense' | 'nationalID';
+    identificationNo: string;
+    identificationDocumentId: string;
+    identificationDocument: string; // Adjust as per your file handling needs
+    primaryPhysician:string;
+  }
+  
+  
+  const onSubmit = async (values: FormValues) => {
+  
+    try {
+      setIsLoading(true); // Set loading state to true during form submission
+  
+      let formData: FormData | undefined;
+  
+      // Check if identificationDocument is provided and create FormData for file upload
+      
+      // Prepare patient data object with form data
+      const patientData: Partial<FormValues> = {
+        email: values.email,
+        phone: values.phone,
+        name: values.name,
+        privacyConsent: values.privacyConsent,
+        gender: values.gender,
+        birthDate: values.birthDate,
+        address: values.address,
+        occupation: values.occupation,
+        emergencyContactName: values.emergencyContactName,
+        emergencyContactNumber: values.emergencyContactNumber,
+        insuranceProvider: values.insuranceProvider,
+        insurancePolicyNumber: values.insurancePolicyNumber,
+        allergies: values.allergies,
+        currentMedication: values.currentMedication,
+        familyMedicalHistory: values.familyMedicalHistory,
+        pastMedicalHistory: values.pastMedicalHistory,
+        primaryPhysician:values.primaryPhysician,
+        identificationType: values.identificationType,
+        identificationNo: values.identificationNo,
+        identificationDocumentId: values.identificationDocumentId,
+        identificationDocument:"",
+      };
+  
+      console.log('Patient Data:', patientData); // Debugging output
+  
+      // Call the function to save patient data
+      let newPatient = await savePatientData(patientData);
+      let newPat= newPatient.patient;
+  
+      // Handle success (optional): show alert or redirect
+      toast.success(newPatient.message)
+      if(newPat){
+        toast.error(newPatient.message)
+      }
+      // Handle navigation after successful registration (optional)
+      // if (newPatient) {
+      //   router.push(`/patients/${values.userId}/new-appointment`);
+      // }
+  
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Handle error: display error message or log for debugging
+    } finally {
+      setIsLoading(false); // Always set loading state to false after submission
+    }
   };
+  
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-800 rounded-lg p-8 shadow-lg w-full space-y-6">

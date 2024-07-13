@@ -4,9 +4,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUser } from "@/lib/actions/patient.actions";
 import { toast } from 'react-hot-toast';
-
+import { createAuthUser } from "@/lib/actions/patient.actions";
 
 const schema = z.object({
   firstName: z.string().min(1, { message: "First name is required" }),
@@ -36,11 +35,11 @@ export default function App() {
 
 
 
-      const user = await createUser({name,email,phone});
+      const user = await createAuthUser(name,email,phone);
       toast.success('user registered successfully!'); // Displays a success message
 
       
-      router.push(`/patients/${user.$id}/register`);
+      router.push(`/patients/${user._id}/register`);
     } catch (error) {
       console.error("Error creating user:", error);
     }

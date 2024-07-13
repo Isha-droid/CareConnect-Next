@@ -1,44 +1,69 @@
-import { ID, Query } from "node-appwrite";
-import { users } from "../appwrite.config";
-import { UserRoundIcon } from "lucide-react";
+"use server"
+import connectDB from "@/config/dbConnect";
+import Authe, { IAuthe } from "@/models/Auth";
+import mongoose from 'mongoose';
+import PatientRegister, { IPatientRegister } from "@/models/PatientRegister"; // Adjust the path as per your project structure
 
+// Function to create a new Auth document
+const createAuthUser = async (name: string, email: string, phone: string): Promise<IAuthe> => {
+  try {
+    // Create a new Auth document
+    connectDB();
+    const newUser = new Authe({
+      name,
+      email,
+      phone,
+      registered: false,
+    });
 
+    // Save the document to the database
+    const savedUser = await newUser.save();
 
-export const createUser = async (user: CreateUserParams) => {
-    try {
-        const createdUser = await users.create(ID.unique(),user.email, user.phone, undefined, user.name);
-
-    
-        return createdUser; // Return the created user object
-    } catch (error: any) {
-        if (error && error.code === 409) {
-            // Handle conflict (e.g., duplicate email error)
-            try {
-                // List existing users with the same email
-                const existingUsers = await users.list([
-                    Query.equal("email", user.email),
-                ]);
-                
-                // Return the first existing user found
-                return existingUsers.users[0];
-            } catch (listError) {
-                console.error("Error listing existing users:", listError);
-                throw listError; // Throw listError for further handling
-            }
-        } else {
-            console.error("Error creating user:", error);
-            throw error; // Throw original error for further handling
-        }
-    }
+    return savedUser.toObject(); // Convert Mongoose document to plain JavaScript object
+  } catch (error) {
+    console.error("Error creating auth user:", error);
+    throw error;
+  }
 };
 
-export const getUser = async (userId: string) => {
-    try {
-        const user = await users.get(userId); // Assuming users is your Appwrite service instance
-        console.log(user); // Logging the retrieved user data
-        return user; // Returning the user object
-    } catch (error) {
-        console.error("Error fetching user:", error);
-        throw error; // Rethrow the error or handle as needed in your application
+// Function to get an Auth user by userId
+const getAuthUser = async (userId: string): Promise<IAuthe | null> => {
+  try {
+    const user = await Authe.findById(userId);
+
+    if (user) {
+      return user.toObject(); // Convert Mongoose document to plain JavaScript object
     }
+    return null;
+  } catch (error) {
+    console.error("Error fetching auth user:", error);
+    throw error;
+  }
 };
+
+// Function to save patient data
+const savePatientData = async (patientData: Partial<IPatientRegister>): Promise<{ message: string, patient?: IPatientRegister }> => {
+  try {
+    // Create a new instance of PatientRegister with the provided data
+    const newPatient = new PatientRegister(patientData);
+
+    // Save the new patient data to the database
+    const savedPatient = await newPatient.save();
+
+    return {
+      message: 'Patient registered successfully!',
+      patient: savedPatient.toObject() // Convert Mongoose document to plain JavaScript object
+    };
+
+  } catch (error) {
+    if (error.code === 11000 || error.code === 11001) {
+      // 11000 and 11001 are MongoDB duplicate key error codes for unique constraint violation
+      console.log('Patient with this email or phone already exists:', error.message);
+      return { message: 'You have already registered' }; // Return a message object
+    }
+    console.error('Error saving patient data:', error);
+    throw error;
+  }
+};
+
+export { createAuthUser, getAuthUser, savePatientData };
