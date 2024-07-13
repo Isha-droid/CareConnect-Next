@@ -110,19 +110,14 @@ const RegisterForm = ({ user }: { user: User }) => {
   
       console.log('Patient Data:', patientData); // Debugging output
   
-      // Call the function to save patient data
       let newPatient = await savePatientData(patientData);
       let newPat= newPatient.patient;
-  
-      // Handle success (optional): show alert or redirect
-      toast.success(newPatient.message)
-      if(newPat){
+      if(newPat==null){
         toast.error(newPatient.message)
       }
-      // Handle navigation after successful registration (optional)
-      // if (newPatient) {
-      //   router.push(`/patients/${values.userId}/new-appointment`);
-      // }
+  
+      toast.success(newPatient.message)
+      
   
     } catch (error) {
       console.error('Error submitting form:', error);

@@ -29,22 +29,31 @@ export default function App() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const email=data.email;
-      const name=data.firstName;
-      const phone="+91"+data.phone;
+      const email = data.email;
+      const name = data.firstName;
+      const phone = "+91" + data.phone;
+  
+      const user= await createAuthUser(name, email, phone);
 
-
-
-      const user = await createAuthUser(name,email,phone);
-      toast.success('user registered successfully!'); // Displays a success message
-
+      if (user.message == "User already exists" && user.patient) {
+        toast.error(user.message);
+        router.push(`/patients/${user.patient._id}/new-appointment`);
+      } 
+  
+      if (user.message == "User already exists") {
+        toast.error(user.message);
+      } 
       
-      router.push(`/patients/${user._id}/register`);
+        else {
+        toast.success(user.message);
+        router.push(`/patients/${user.patient._id}/register`);
+      }
     } catch (error) {
       console.error("Error creating user:", error);
+      toast.error('An unexpected error occurred. Please try again.');
     }
   };
-
+  
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-900">
       <form

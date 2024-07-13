@@ -8,7 +8,7 @@ interface IAuthe extends Document {
 }
 
 const autheSchema: Schema<IAuthe> = new Schema({
-  email: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
   name: { type: String, required: true },
   registered: { type: Boolean, default: false }
@@ -18,4 +18,4 @@ const autheSchema: Schema<IAuthe> = new Schema({
 const Authe: Model<IAuthe> = mongoose.models.Authe || mongoose.model<IAuthe>('Authe', autheSchema);
 
 export default Authe;
-export { IAuthe };
+export type { IAuthe };

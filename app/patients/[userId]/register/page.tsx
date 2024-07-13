@@ -6,9 +6,13 @@ import { getAuthUser } from "@/lib/actions/patient.actions";
 
 const Register = async ({ params: { userId } }: SearchParamProps) => {
   const user = await getAuthUser(userId);
-  // const patient = await getPatient(userId);
+  const patient = await getAuthUser(userId);
+  console.log(patient)
+  if(patient?.registered){
+    alert("you have registered successfully")
+    redirect(`/`);
+  }
 
-  // if (patient) redirect(`/patients/${userId}/new-appointment`);
 
   return (
     <div className="flex h-screen max-h-screen">
