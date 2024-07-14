@@ -1,10 +1,14 @@
-"use server"
+"use server";
 import connectDB from "@/config/dbConnect";
 import Authe, { IAuthe } from "@/models/Auth";
 import PatientRegister, { IPatientRegister } from "@/models/PatientRegister";
-import { databases } from "../appwrite.config";
 
 connectDB();
+
+interface AuthUserResponse {
+  patient: any | null;
+  message: string;
+}
 
 // Function to create a new Auth document
 const createAuthUser = async (name: string, email: string, phone: string): Promise<AuthUserResponse> => {
@@ -12,7 +16,7 @@ const createAuthUser = async (name: string, email: string, phone: string): Promi
     // Check if user already exists
     const existingUser = await Authe.findOne({ email });
     if (existingUser) {
-      return { patient: existingUser, message: 'User already exists' };
+      return { patient: JSON.parse(JSON.stringify(existingUser)), message: 'User already exists' };
     }
 
     // Create new user if not exists
@@ -24,8 +28,7 @@ const createAuthUser = async (name: string, email: string, phone: string): Promi
     });
 
     const savedUser = await newUser.save();
-    const data= JSON.parse(JSON.stringify(savedUser))
-    return { patient: data, message: 'User registered successfully' };
+    return { patient: JSON.parse(JSON.stringify(savedUser)), message: 'User registered successfully' };
   } catch (error) {
     console.error("Error creating auth user:", error);
     return { patient: null, message: 'Server error' };
@@ -37,9 +40,8 @@ const createAuthUser = async (name: string, email: string, phone: string): Promi
 const getAuthUser = async (userId: string): Promise<IAuthe | null> => {
   try {
     const user = await Authe.findById(userId);
-    const data= JSON.parse(JSON.stringify(user))
     if (user) {
-      return data; // Convert Mongoose document to plain JavaScript object
+      return JSON.parse(JSON.stringify(user)); // Convert Mongoose document to plain JavaScript object
     }
     return null;
   } catch (error) {
@@ -48,9 +50,9 @@ const getAuthUser = async (userId: string): Promise<IAuthe | null> => {
   }
 };
 
+// Function to save patient data
 const savePatientData = async (patientData: Partial<IPatientRegister>): Promise<{ message: string, patient?: IPatientRegister }> => {
   try {
-    
     const newPatient = new PatientRegister(patientData);
     const savedPatient = await newPatient.save();
 
@@ -58,9 +60,8 @@ const savePatientData = async (patientData: Partial<IPatientRegister>): Promise<
     const updatedAuthUser = await Authe.findOneAndUpdate(
       { email: patientData.email },
       { registered: true },
+      { new: true } // To return the updated document
     );
-    console.log(updatedAuthUser)
-    const data= JSON.parse(JSON.stringify(updatedAuthUser))
 
     if (!updatedAuthUser) {
       console.log('Auth user not found for email:', patientData.email);
@@ -68,7 +69,7 @@ const savePatientData = async (patientData: Partial<IPatientRegister>): Promise<
 
     return {
       message: 'Patient registered successfully!',
-      patient: data // Convert Mongoose document to plain JavaScript object
+      patient: JSON.parse(JSON.stringify(updatedAuthUser)) // Convert Mongoose document to plain JavaScript object
     };
 
   } catch (error: any) {
@@ -82,6 +83,7 @@ const savePatientData = async (patientData: Partial<IPatientRegister>): Promise<
 };
 
 
+// Function to get patient by email
 const getPatientByEmail = async (email: string): Promise<{ message: string, patient?: IPatientRegister }> => {
   try {
     // Find patient by email
@@ -90,11 +92,10 @@ const getPatientByEmail = async (email: string): Promise<{ message: string, pati
     if (!patient) {
       return { message: 'Patient not found' };
     }
-    const data= JSON.parse(JSON.stringify(patient))
 
     return {
       message: 'Patient data retrieved successfully!',
-      patient: data // Convert Mongoose document to plain JavaScript object
+      patient: JSON.parse(JSON.stringify(patient)) // Convert Mongoose document to plain JavaScript object
     };
 
   } catch (error) {
@@ -102,6 +103,5 @@ const getPatientByEmail = async (email: string): Promise<{ message: string, pati
     throw error;
   }
 };
-
 
 export { createAuthUser, getAuthUser, savePatientData, getPatientByEmail };

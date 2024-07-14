@@ -21,7 +21,7 @@ type FormValues = z.infer<typeof schema>;
 //   return { $id: "generated-id" }; // Simulated user object with an ID
 // }
 
-export default function App() {
+export default function PatientFrom() {
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
@@ -55,7 +55,7 @@ export default function App() {
   };
   
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
+    <div className="flex items-center justify-center min-h-screen">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-xl w-full"
