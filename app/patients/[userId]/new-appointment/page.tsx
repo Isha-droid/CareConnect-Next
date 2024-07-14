@@ -1,10 +1,33 @@
+"use client"
+import { useState, useEffect } from 'react';
 import Image from "next/image";
-
-import { getAuthUser } from "@/lib/actions/patient.actions";
+import { getAuthUser, getPatientByEmail } from "@/lib/actions/patient.actions";
 import AppointmentForm from "@/components/forms/AppointmentForm";
+import { IPatientRegister } from '../../../../models/PatientRegister';
 
-const Appointment = async ({ params: { userId } }: SearchParamProps) => {
-  const patient = await getAuthUser(userId);
+const Appointment = ({ params: { userId } }: SearchParamProps) => {
+  const [patient, setPatient] = useState<IPatientRegister | null>(null); // Ensure to specify the type here
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const user = await getAuthUser(userId);
+        const patientData = await getPatientByEmail(user?.email);
+        console.log(patientData.patient)
+        setPatient(patientData.patient); // Assuming patientData structure is { message: string, patient?: IPatientRegister }
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching patient data:', error);
+      }
+    };
+
+    fetchData();
+  }, [userId]); // Fetch data when userId changes
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div className="flex h-screen max-h-screen">
@@ -18,11 +41,13 @@ const Appointment = async ({ params: { userId } }: SearchParamProps) => {
             className="mb-12 h-10 w-fit"
           />
 
-          <AppointmentForm
-            patientId={patient?.$id}
-            userId={userId}
-            type="create"
-          />
+          {patient && (
+            <AppointmentForm
+              patientId={patient?._id} // Adjust according to your actual data structure
+              userId={userId}
+              type="create"
+            />
+          )}
 
           <p className="copyright py-12">© 2024 CarePluse</p>
         </div>

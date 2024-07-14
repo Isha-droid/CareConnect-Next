@@ -1,17 +1,18 @@
-"use client"
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { addAppointment } from '@/lib/actions/appointmet.actions';
+import toast from 'react-hot-toast';
 
 const doctors = [
   { name: "Dr. John Doe", image: "/doctor1.jpg" },
   { name: "Dr. Jane Smith", image: "/doctor2.jpg" },
 ];
 
-const getAppointmentSchema = (type: string) => z.object({
+const getAppointmentSchema = (type) => z.object({
   primaryPhysician: z.string().nonempty("Doctor is required"),
   priority: z.string().nonempty("Priority is required"),
   schedule: z.date(),
@@ -33,37 +34,51 @@ const SubmitButton = ({ isLoading, children }) => (
   </button>
 );
 
-const AppointmentForm = ({ userId, patientId, type = "create", appointment, setOpen }) => {
+const AppointmentForm = ({ userId, patientId, type }) => {
   const AppointmentFormValidation = getAppointmentSchema(type);
   const form = useForm({
     resolver: zodResolver(AppointmentFormValidation),
     defaultValues: {
-      primaryPhysician: appointment ? appointment.primaryPhysician : "",
+      primaryPhysician: "",
       priority: "normal",
-      schedule: appointment ? new Date(appointment.schedule) : new Date(),
-      reason: appointment ? appointment.reason : "",
-      note: appointment?.note || "",
-      cancellationReason: appointment?.cancellationReason || "",
+      schedule: new Date(),
+      reason: "",
+      note: "",
+      cancellationReason: "",
     },
   });
 
   const onSubmit = async (values) => {
-    console.log(values);
-    // Handle form submission logic
-  };
+    try {
+      const formData = {
+        patientId,
+        primaryPhysician: values.primaryPhysician,
+        schedule: values.schedule,
+        reason: values.reason,
+        priority: values.priority,
+        note: values.note,
+        cancellationReason: values.cancellationReason,
+      };
 
-  useEffect(() => {
-    if (form.watch("priority") === "urgent") {
-      form.setValue("schedule", new Date());
+      // Log formData to check patientId presence
+      console.log(formData);
+
+      const savedAppointment = await addAppointment(formData);
+      console.log('Appointment saved:', savedAppointment);
+    } catch (error) {
+      console.error('Error adding appointment:', error.message);
+      // Handle error state or display error message to user
+      toast.error(error.message)
+
     }
-  }, [form.watch("priority")]);
+  };
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 bg-gray-800 text-white space-y-6">
       {type === "create" && (
         <div className="space-y-4">
           <h1 className="text-2xl text-pink-500">New Appointment</h1>
-          <p className="text-gray-400">Request a new appointment in 10 seconds.</p>
+          <p className="text-gray-400">Request a new appointment.</p>
         </div>
       )}
 
@@ -125,7 +140,7 @@ const AppointmentForm = ({ userId, patientId, type = "create", appointment, setO
       )}
 
       {form.watch("priority") === "urgent" && (
-        <p className="text-pink-500">We are here to help you. Your appointment is set to the current time.</p>
+        <p className="text-pink-500">Your appointment is set to the current time.</p>
       )}
 
       {type === "cancel" && (

@@ -2,6 +2,7 @@
 import connectDB from "@/config/dbConnect";
 import Authe, { IAuthe } from "@/models/Auth";
 import PatientRegister, { IPatientRegister } from "@/models/PatientRegister";
+import { databases } from "../appwrite.config";
 
 connectDB();
 
@@ -23,7 +24,8 @@ const createAuthUser = async (name: string, email: string, phone: string): Promi
     });
 
     const savedUser = await newUser.save();
-    return { patient: savedUser.toObject(), message: 'User registered successfully' };
+    const data= JSON.parse(JSON.stringify(savedUser))
+    return { patient: data, message: 'User registered successfully' };
   } catch (error) {
     console.error("Error creating auth user:", error);
     return { patient: null, message: 'Server error' };
@@ -35,8 +37,9 @@ const createAuthUser = async (name: string, email: string, phone: string): Promi
 const getAuthUser = async (userId: string): Promise<IAuthe | null> => {
   try {
     const user = await Authe.findById(userId);
+    const data= JSON.parse(JSON.stringify(user))
     if (user) {
-      return user.toObject(); // Convert Mongoose document to plain JavaScript object
+      return data; // Convert Mongoose document to plain JavaScript object
     }
     return null;
   } catch (error) {
@@ -57,6 +60,7 @@ const savePatientData = async (patientData: Partial<IPatientRegister>): Promise<
       { registered: true },
     );
     console.log(updatedAuthUser)
+    const data= JSON.parse(JSON.stringify(updatedAuthUser))
 
     if (!updatedAuthUser) {
       console.log('Auth user not found for email:', patientData.email);
@@ -64,7 +68,7 @@ const savePatientData = async (patientData: Partial<IPatientRegister>): Promise<
 
     return {
       message: 'Patient registered successfully!',
-      patient: savedPatient.toObject() // Convert Mongoose document to plain JavaScript object
+      patient: data // Convert Mongoose document to plain JavaScript object
     };
 
   } catch (error: any) {
@@ -77,4 +81,27 @@ const savePatientData = async (patientData: Partial<IPatientRegister>): Promise<
   }
 };
 
-export { createAuthUser, getAuthUser, savePatientData };
+
+const getPatientByEmail = async (email: string): Promise<{ message: string, patient?: IPatientRegister }> => {
+  try {
+    // Find patient by email
+    const patient = await PatientRegister.findOne({ email });
+
+    if (!patient) {
+      return { message: 'Patient not found' };
+    }
+    const data= JSON.parse(JSON.stringify(patient))
+
+    return {
+      message: 'Patient data retrieved successfully!',
+      patient: data // Convert Mongoose document to plain JavaScript object
+    };
+
+  } catch (error) {
+    console.error('Error fetching patient data by email:', error);
+    throw error;
+  }
+};
+
+
+export { createAuthUser, getAuthUser, savePatientData, getPatientByEmail };
