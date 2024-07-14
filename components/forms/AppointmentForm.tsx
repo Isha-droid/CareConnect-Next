@@ -7,36 +7,51 @@ import "react-datepicker/dist/react-datepicker.css";
 import { addAppointment } from '@/lib/actions/appointmet.actions';
 import toast from 'react-hot-toast';
 
-const doctors = [
-  { name: "Dr. John Doe", image: "/doctor1.jpg" },
-  { name: "Dr. Jane Smith", image: "/doctor2.jpg" },
-];
+// Interface for appointment form data
+interface AppointmentFormData {
+  patientId: string;
+  primaryPhysician: string;
+  priority: 'normal' | 'urgent';
+  schedule: Date;
+  reason: string;
+  note?: string;
+  cancellationReason?: string;
+}
 
-const getAppointmentSchema = (type) => z.object({
+// Zod schema for appointment form validation
+const getAppointmentSchema = (type: 'create' | 'cancel') => z.object({
   primaryPhysician: z.string().nonempty("Doctor is required"),
-  priority: z.string().nonempty("Priority is required"),
+  priority: z.enum(['normal', 'urgent']),
   schedule: z.date(),
   reason: type !== "cancel" ? z.string().nonempty("Reason is required") : z.string().optional(),
   note: type !== "cancel" ? z.string().optional() : z.string().optional(),
   cancellationReason: type === "cancel" ? z.string().nonempty("Cancellation reason is required") : z.string().optional(),
 });
 
-const CustomFormField = ({ children, error }) => (
+// Custom form field component
+const CustomFormField: React.FC<{ error?: any }> = ({ children, error }) => (
   <div className="mb-4">
     {children}
     {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
   </div>
 );
 
-const SubmitButton = ({ isLoading, children }) => (
+// Submit button component
+const SubmitButton: React.FC<{ isLoading: boolean }> = ({ isLoading, children }) => (
   <button type="submit" className="bg-pink-500 text-white px-4 py-2 rounded">
     {isLoading ? "Loading..." : children}
   </button>
 );
 
-const AppointmentForm = ({ userId, patientId, type }) => {
+// Main AppointmentForm component
+const AppointmentForm: React.FC<{ userId: string; patientId: string; type: 'create' | 'cancel'; }> = ({ userId, patientId, type }) => {
+  const doctors = [
+    { name: "Dr. John Doe", image: "/doctor1.jpg" },
+    { name: "Dr. Jane Smith", image: "/doctor2.jpg" },
+  ];
+
   const AppointmentFormValidation = getAppointmentSchema(type);
-  const form = useForm({
+  const form = useForm<AppointmentFormData>({
     resolver: zodResolver(AppointmentFormValidation),
     defaultValues: {
       primaryPhysician: "",
@@ -48,7 +63,7 @@ const AppointmentForm = ({ userId, patientId, type }) => {
     },
   });
 
-  const onSubmit = async (values) => {
+  const onSubmit = async (values: AppointmentFormData) => {
     try {
       const formData = {
         patientId,
@@ -60,16 +75,12 @@ const AppointmentForm = ({ userId, patientId, type }) => {
         cancellationReason: values.cancellationReason,
       };
 
-      // Log formData to check patientId presence
-      console.log(formData);
-
       const savedAppointment = await addAppointment(formData);
-      console.log('Appointment saved:', savedAppointment);
-    } catch (error) {
-      console.error('Error adding appointment:', error.message);
-      // Handle error state or display error message to user
-      toast.error(error.message)
+      toast.success("Appointment booked successfully");
 
+    } catch (error: any) {
+      console.error('Error adding appointment:', error.message);
+      toast.error(error.message);
     }
   };
 
