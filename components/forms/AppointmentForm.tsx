@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,9 +7,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addAppointment } from '@/lib/actions/appointmet.actions';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
-// Interface for appointment form data
 interface AppointmentFormData {
+  userId:string,
   patientId: string;
   primaryPhysician: string;
   priority: 'normal' | 'urgent';
@@ -45,6 +47,7 @@ const SubmitButton: React.FC<{ isLoading: boolean }> = ({ isLoading, children })
 
 // Main AppointmentForm component
 const AppointmentForm: React.FC<{ userId: string; patientId: string; type: 'create' | 'cancel'; }> = ({ userId, patientId, type }) => {
+  const router = useRouter()
   const doctors = [
     { name: "Dr. John Doe", image: "/doctor1.jpg" },
     { name: "Dr. Jane Smith", image: "/doctor2.jpg" },
@@ -66,6 +69,7 @@ const AppointmentForm: React.FC<{ userId: string; patientId: string; type: 'crea
   const onSubmit = async (values: AppointmentFormData) => {
     try {
       const formData = {
+        userId,
         patientId,
         primaryPhysician: values.primaryPhysician,
         schedule: values.schedule,
@@ -77,6 +81,12 @@ const AppointmentForm: React.FC<{ userId: string; patientId: string; type: 'crea
 
       const savedAppointment = await addAppointment(formData);
       toast.success("Appointment booked successfully");
+      form.reset();
+          router.push(
+            `/patients/${userId}/new-appointment/success?appointmentId=${savedAppointment._id}`
+          );
+
+      redirect(`/patients/${userId}/new-appointment/success`)
 
     } catch (error: any) {
       console.error('Error adding appointment:', error.message);
