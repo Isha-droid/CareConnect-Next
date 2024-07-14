@@ -86,7 +86,6 @@ const AppointmentForm: React.FC<{ userId: string; patientId: string; type: 'crea
             `/patients/${userId}/new-appointment/success?appointmentId=${savedAppointment._id}`
           );
 
-      redirect(`/patients/${userId}/new-appointment/success`)
 
     } catch (error: any) {
       console.error('Error adding appointment:', error.message);
