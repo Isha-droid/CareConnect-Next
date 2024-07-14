@@ -12,18 +12,27 @@ const Appointment = ({ params: { userId } }: SearchParamProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const user = await getAuthUser(userId);
-        const patientData = await getPatientByEmail(user?.email);
-        console.log(patientData.patient)
-        setPatient(patientData.patient); // Assuming patientData structure is { message: string, patient?: IPatientRegister }
-        setLoading(false);
+        if (userId) {
+          const user = await getAuthUser(userId);
+          if (user?.email) {
+            const patientData = await getPatientByEmail(user.email);
+            console.log(patientData.patient);
+            setPatient(patientData.patient); // Assuming patientData structure is { message: string, patient?: IPatientRegister }
+            setLoading(false);
+          } else {
+            console.error('User email is undefined or null.');
+          }
+        } else {
+          console.error('userId is undefined or null.');
+        }
       } catch (error) {
         console.error('Error fetching patient data:', error);
       }
     };
-
+  
     fetchData();
-  }, [userId]); // Fetch data when userId changes
+  }, [userId]);
+  
 
   if (loading) {
     return <p>Loading...</p>;
