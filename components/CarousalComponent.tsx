@@ -56,8 +56,8 @@ const CarouselSection = () => {
                 words={[' Better Health', ' Happy Days', ' Longer Lives']}
               />
               <br/>
-              
-              <Link href="patients/patient-form" className="inline-block mt-4 px-6 py-3 rounded-md bg-pink-500 text-white text-2xl hover:bg-pink-600 transition duration-300 ease-in-out">
+
+              <Link href="patients/patient-login" className="inline-block mt-4 px-6 py-3 rounded-md bg-pink-500 text-white text-2xl hover:bg-pink-600 transition duration-300 ease-in-out">
                 Get Started
               </Link>
             </div>
