@@ -22,31 +22,32 @@ const AdminPasskeyModal = ({ onClose }) => {
   const [passkey, setPasskey] = useState("");
   const [error, setError] = useState("");
 
-//   const encryptedKey =
-//     typeof window !== "undefined"
-//       ? window.localStorage.getItem("accessKey")
-//       : null;
+  const encryptedKey =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("accessKey")
+      : null;
 
-//   useEffect(() => {
-//     const accessKey = encryptedKey && decryptKey(encryptedKey);
+  useEffect(() => {
+    const accessKey = encryptedKey && decryptKey(encryptedKey);
 
-//     if (accessKey === process.env.NEXT_PUBLIC_ADMIN_PASSKEY!.toString()) {
-//       onClose();
-//       router.push("/admin");
-//     }
-//   }, [encryptedKey]);
+    if (accessKey === "123456") {
+      onClose();
+      router.push("/admin");
+    }
+  }, [encryptedKey]);
 
-//   const validatePasskey = (e) => {
-//     e.preventDefault();
+  const validatePasskey = (e) => {
+    e.preventDefault();
 
-//     if (passkey === process.env.NEXT_PUBLIC_ADMIN_PASSKEY) {
-//       const encryptedKey = encryptKey(passkey);
-//       localStorage.setItem("accessKey", encryptedKey);
-//       onClose();
-//     } else {
-//       setError("Invalid passkey. Please try again.");
-//     }
-//   };
+    if (passkey === "123456") {
+      const encryptedKey = encryptKey(passkey);
+      localStorage.setItem("accessKey", encryptedKey);
+    //   onClose();
+    alert("submitted sucessfully")
+    } else {
+      setError("Invalid passkey. Please try again.");
+    }
+  };
 
   return (
     <AlertDialog open onOpenChange={onClose}>
@@ -91,7 +92,7 @@ const AdminPasskeyModal = ({ onClose }) => {
         </div>
         <AlertDialogFooter>
           <AlertDialogAction
-            onClick={()=>alert("button clicked")}
+            onClick={(e)=>validatePasskey(e)}
             className="bg-pink-500 text-white shad-primary-btn w-full"
           >
             Enter Admin Passkey
