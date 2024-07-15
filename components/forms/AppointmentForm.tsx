@@ -1,36 +1,54 @@
-"use client"
-import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { addAppointment } from '@/lib/actions/appointmet.actions';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import {
+  addAppointment,
+  fetchPendingAppointments,
+  updateAppointment,
+} from "@/lib/actions/appointmet.actions";
 
-interface AppointmentFormData {
-  userId:string,
+interface Appointment {
+  _id: string;
+  userId: string;
   patientId: string;
   primaryPhysician: string;
-  priority: 'normal' | 'urgent';
+  priority: "normal" | "urgent";
   schedule: Date;
   reason: string;
   note?: string;
   cancellationReason?: string;
 }
 
-// Zod schema for appointment form validation
-const getAppointmentSchema = (type: 'create' | 'cancel') => z.object({
-  primaryPhysician: z.string().nonempty("Doctor is required"),
-  priority: z.enum(['normal', 'urgent']),
-  schedule: z.date(),
-  reason: type !== "cancel" ? z.string().nonempty("Reason is required") : z.string().optional(),
-  note: type !== "cancel" ? z.string().optional() : z.string().optional(),
-  cancellationReason: type === "cancel" ? z.string().nonempty("Cancellation reason is required") : z.string().optional(),
-});
+interface AppointmentFormData {
+  primaryPhysician: string;
+  priority: "normal" | "urgent";
+  schedule: Date;
+  reason: string;
+  note?: string;
+  cancellationReason?: string;
+}
 
-// Custom form field component
+const getAppointmentSchema = (type: "create" | "cancel") =>
+  z.object({
+    primaryPhysician: z.string().nonempty("Doctor is required"),
+    priority: z.enum(["normal", "urgent"]),
+    schedule: z.date(),
+    reason:
+      type === "create"
+        ? z.string().nonempty("Reason is required")
+        : z.string().optional(),
+    note: type === "create" ? z.string().optional() : z.string().optional(),
+    cancellationReason:
+      type === "cancel"
+        ? z.string().nonempty("Cancellation reason is required")
+        : z.string().optional(),
+  });
+
 const CustomFormField: React.FC<{ error?: any }> = ({ children, error }) => (
   <div className="mb-4">
     {children}
@@ -38,23 +56,36 @@ const CustomFormField: React.FC<{ error?: any }> = ({ children, error }) => (
   </div>
 );
 
-// Submit button component
-const SubmitButton: React.FC<{ isLoading: boolean }> = ({ isLoading, children }) => (
+const SubmitButton: React.FC<{ isLoading: boolean }> = ({
+  isLoading,
+  children,
+}) => (
   <button type="submit" className="bg-pink-500 text-white px-4 py-2 rounded">
     {isLoading ? "Loading..." : children}
   </button>
 );
 
-// Main AppointmentForm component
-const AppointmentForm: React.FC<{ userId: string; patientId: string; type: 'create' | 'cancel'; }> = ({ userId, patientId, type }) => {
-  const router = useRouter()
-  const doctors = [
-    { name: "Dr. John Doe", image: "/doctor1.jpg" },
-    { name: "Dr. Jane Smith", image: "/doctor2.jpg" },
-  ];
+const AppointmentForm: React.FC<{
+  userId: string;
+  patientId: string;
+  type: "create" | "cancel";
+}> = ({ userId, patientId, type }) => {
+  const router = useRouter();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(
+    null
+  );
+  const [cancellationReason, setCancellationReason] = useState<string>("");
 
   const AppointmentFormValidation = getAppointmentSchema(type);
-  const form = useForm<AppointmentFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+  } = useForm<AppointmentFormData>({
     resolver: zodResolver(AppointmentFormValidation),
     defaultValues: {
       primaryPhysician: "",
@@ -66,117 +97,226 @@ const AppointmentForm: React.FC<{ userId: string; patientId: string; type: 'crea
     },
   });
 
-  const onSubmit = async (values: AppointmentFormData) => {
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const pendingAppointments = await fetchPendingAppointments(userId);
+        setAppointments(pendingAppointments);
+      } catch (error) {
+        console.error("Error fetching pending appointments:", error.message);
+        toast.error("Failed to fetch pending appointments");
+      }
+    };
+
+    if (type === "cancel") {
+      fetchAppointments();
+    }
+  }, [userId, type]);
+
+  const onSubmit = async (data: AppointmentFormData) => {
     try {
-      const formData = {
+      const newAppointment = await addAppointment({
+        ...data,
         userId,
         patientId,
-        primaryPhysician: values.primaryPhysician,
-        schedule: values.schedule,
-        reason: values.reason,
-        priority: values.priority,
-        note: values.note,
-        cancellationReason: values.cancellationReason,
-      };
-
-      const savedAppointment = await addAppointment(formData);
-      toast.success("Appointment booked successfully");
-      form.reset();
-          router.push(
-            `/patients/${userId}/new-appointment/success?appointmentId=${savedAppointment._id}`
-          );
-
-
-    } catch (error: any) {
-      console.error('Error adding appointment:', error.message);
-      toast.error(error.message);
+      });
+      toast.success("Appointment added successfully");
+      router.push("/appointments"); // Redirect to appointments page after submission
+    } catch (error) {
+      console.error("Error adding appointment:", error.message);
+      toast.error("Failed to add appointment");
     }
   };
 
+  const onCancelAppointment = async (
+    appointmentId: string,
+    cancellationReason: string
+  ) => {
+    try {
+      // Update appointment with cancellation reason and status
+      const updatedUser=await updateAppointment(appointmentId, {
+        cancellationReason,
+        status: "cancelled",
+      });
+
+      // Handle UI updates or notifications (e.g., toast notifications)
+      if (updatedUser) {
+        toast.success(
+          `Appointment with ID ${appointmentId} cancelled successfully`
+        );
+      }
+      
+
+      // Remove cancelled appointment from state or UI list
+      setAppointments((prevAppointments) =>
+        prevAppointments.filter((appointment) => appointment._id !== appointmentId)
+      );
+
+      // Reset cancellation reason form field (if using a form library like react-hook-form)
+      setCancellationReason("");
+    } catch (error) {
+      console.error("Error cancelling appointment:", error.message);
+      toast.error("Failed to cancel appointment");
+    }
+  };
+
+  const handleRowClick = (
+    appointmentId: string,
+    cancellationReason: string
+  ) => {
+    setSelectedAppointmentId(appointmentId);
+    setCancellationReason(cancellationReason);
+  };
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 bg-gray-800 text-white space-y-6">
-      {type === "create" && (
-        <div className="space-y-4">
-          <h1 className="text-2xl text-pink-500">New Appointment</h1>
-          <p className="text-gray-400">Request a new appointment.</p>
+    <div className="p-6 bg-gray-800 text-white">
+      {type === "cancel" && (
+        <div>
+          <h1 className="text-2xl text-pink-500">Cancel Your Appointment</h1>
+
+          {appointments.length > 0 ? (
+            <div className="mt-4">
+              <h2 className="text-xl text-white mb-2">Pending Appointments</h2>
+              <div className="overflow-x-auto">
+  <table className="table-auto min-w-full divide-y divide-gray-700">
+    <thead>
+      <tr className="bg-gray-800 text-white">
+        <th className="border border-gray-700 px-4 py-2">Physician</th>
+        <th className="border border-gray-700 px-4 py-2">Schedule</th>
+        <th className="border border-gray-700 px-4 py-2">Reason</th>
+      </tr>
+    </thead>
+    <tbody>
+      {appointments.map((appointment) => (
+        <tr
+          key={appointment._id}
+          className={`bg-gray-700 text-white cursor-pointer ${
+            selectedAppointmentId === appointment._id ? "bg-gray-600" : ""
+          }`}
+          onClick={() =>
+            handleRowClick(
+              appointment._id,
+              appointment.cancellationReason || ""
+            )
+          }
+        >
+          <td className="border border-gray-700 px-4 py-2">
+            {appointment.primaryPhysician}
+          </td>
+          <td className="border border-gray-700 px-4 py-2">
+            {new Date(appointment.schedule).toLocaleString()}
+          </td>
+          <td className="border border-gray-700 px-4 py-2">
+            {appointment.reason}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+            </div>
+          ) : (
+            <p>No pending appointments to cancel.</p>
+          )}
+
+          {selectedAppointmentId && (
+            <>
+              <CustomFormField error={errors.cancellationReason}>
+                <textarea
+                  {...register("cancellationReason", {
+                    required: "Cancellation reason is required",
+                  })}
+                  placeholder="Reason for cancellation"
+                  className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none mt-4"
+                  value={cancellationReason}
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                />
+                {errors.cancellationReason && (
+                  <span className="text-sm text-pink-500">
+                    {errors.cancellationReason.message}
+                  </span>
+                )}
+              </CustomFormField>
+
+              <button
+                onClick={() =>
+                  onCancelAppointment(selectedAppointmentId, cancellationReason)
+                }
+                className="bg-pink-500 text-white px-4 py-2 rounded mt-4"
+              >
+                Cancel Appointment
+              </button>
+            </>
+          )}
         </div>
       )}
 
-      <CustomFormField error={form.formState.errors.primaryPhysician}>
-        <select
-          {...form.register("primaryPhysician")}
-          className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+      {type === "create" && (
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="p-6 bg-gray-800 text-white space-y-6"
         >
-          <option value="">Select a doctor</option>
-          {doctors.map((doctor, index) => (
-            <option key={index} value={doctor.name}>{doctor.name}</option>
-          ))}
-        </select>
-      </CustomFormField>
+          <div className="space-y-4">
+            <h1 className="text-2xl text-pink-500">New Appointment</h1>
+            <p className="text-gray-400">Request a new appointment.</p>
+          </div>
 
-      <CustomFormField error={form.formState.errors.priority}>
-        <select
-          {...form.register("priority")}
-          className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-        >
-          <option value="normal">Normal</option>
-          <option value="urgent">Urgent</option>
-        </select>
-      </CustomFormField>
-
-      <CustomFormField error={form.formState.errors.schedule}>
-        <Controller
-          control={form.control}
-          name="schedule"
-          render={({ field }) => (
-            <DatePicker
-              placeholderText="Expected appointment date"
+          <CustomFormField error={errors.primaryPhysician}>
+            <select
+              {...register("primaryPhysician")}
               className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-              selected={field.value}
-              onChange={field.onChange}
+            >
+              <option value="">Select a doctor</option>
+              {/* Assuming doctors is an array of available doctors */}
+              {doctors.map((doctor, index) => (
+                <option key={index} value={doctor.name}>
+                  {doctor.name}
+                </option>
+              ))}
+            </select>
+          </CustomFormField>
+
+          <CustomFormField error={errors.priority}>
+            <select
+              {...register("priority")}
+              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+            >
+              <option value="normal">Normal</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </CustomFormField>
+
+          <CustomFormField error={errors.schedule}>
+            <DatePicker
+              selected={watch("schedule")}
+              onChange={(date) => setValue("schedule", date)}
               showTimeSelect
               dateFormat="MM/dd/yyyy h:mm aa"
+              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
             />
-          )}
-        />
-      </CustomFormField>
+          </CustomFormField>
 
-      <CustomFormField error={form.formState.errors.reason}>
-        <textarea
-          {...form.register("reason")}
-          placeholder="Reason for appointment"
-          className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-        />
-      </CustomFormField>
+          <CustomFormField error={errors.reason}>
+            <textarea
+              {...register("reason")}
+              placeholder="Reason for appointment"
+              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+            />
+          </CustomFormField>
 
-      {form.watch("priority") !== "urgent" && (
-        <CustomFormField error={form.formState.errors.note}>
-          <textarea
-            {...form.register("note")}
-            placeholder="Comments/notes"
-            className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-          />
-        </CustomFormField>
+          <CustomFormField error={errors.note}>
+            <textarea
+              {...register("note")}
+              placeholder="Additional notes (optional)"
+              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+            />
+          </CustomFormField>
+
+          <SubmitButton isLoading={false}>Request Appointment</SubmitButton>
+        </form>
       )}
-
-      {form.watch("priority") === "urgent" && (
-        <p className="text-pink-500">Your appointment is set to the current time.</p>
-      )}
-
-      {type === "cancel" && (
-        <CustomFormField error={form.formState.errors.cancellationReason}>
-          <textarea
-            {...form.register("cancellationReason")}
-            placeholder="Reason for cancellation"
-            className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-          />
-        </CustomFormField>
-      )}
-
-      <SubmitButton isLoading={false}>
-        {type === "cancel" ? "Cancel Appointment" : "Submit Appointment"}
-      </SubmitButton>
-    </form>
+    </div>
   );
 };
 

@@ -67,3 +67,46 @@ export const getAppointmentById = async (appointmentId: string): Promise<IAppoin
     throw new Error(`Error fetching appointment: ${error.message}`);
   }
 };
+export const fetchPendingAppointments = async (userId:string) => {
+  try {
+    const appointments = await Appointment.find({
+      userId: userId,
+      status: 'pending',
+      cancellationReason: ''
+    }).exec();
+   const data= JSON.parse(JSON.stringify(appointments))
+    return data;
+  } catch (error) {
+    console.error('Error fetching appointments:', error.message);
+    throw error;
+  }
+};
+
+export const updateAppointment = async (
+  appointmentId: string,
+  updatedFields: Partial<IAppointment>
+): Promise<IAppointment> => {
+  try {
+    // Find the appointment by ID
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+      throw new Error('Appointment not found.');
+    }
+
+    // Update specific fields in the appointment
+    Object.keys(updatedFields).forEach((key) => {
+      appointment[key] = updatedFields[key];
+    });
+
+    // Save the updated appointment to the database
+    const updatedAppointment = await appointment.save();
+
+    // Return the updated appointment object
+    const data = JSON.parse(JSON.stringify(updatedAppointment));
+    return data;
+  } catch (error) {
+    // Handle any errors
+    throw new Error(`Error updating appointment: ${error.message}`);
+  }
+};
