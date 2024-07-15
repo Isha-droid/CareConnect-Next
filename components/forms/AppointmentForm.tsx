@@ -11,6 +11,7 @@ import {
   fetchPendingAppointments,
   updateAppointment,
 } from "@/lib/actions/appointmet.actions";
+import { Doctors } from "@/constants";
 
 interface Appointment {
   _id: string;
@@ -121,7 +122,10 @@ const AppointmentForm: React.FC<{
         patientId,
       });
       toast.success("Appointment added successfully");
-      router.push("/appointments"); // Redirect to appointments page after submission
+      router.push(
+        `/patients/${userId}/new-appointment/success?appointmentId=${newAppointment._id}`
+      );
+
     } catch (error) {
       console.error("Error adding appointment:", error.message);
       toast.error("Failed to add appointment");
@@ -269,7 +273,7 @@ const AppointmentForm: React.FC<{
             >
               <option value="">Select a doctor</option>
               {/* Assuming doctors is an array of available doctors */}
-              {doctors.map((doctor, index) => (
+              {Doctors.map((doctor, index) => (
                 <option key={index} value={doctor.name}>
                   {doctor.name}
                 </option>

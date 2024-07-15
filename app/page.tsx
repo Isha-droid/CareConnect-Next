@@ -1,17 +1,26 @@
 "use client"
 import { useEffect } from 'react';
+import { useState } from 'react';
+
 import { FaClinicMedical } from 'react-icons/fa';
 import Timeline from '@/components/TimeLine';
 import Footer from '@/components/Footer';
 import CarouselSection from '@/components/CarousalComponent';
 import HealthcareCarousel from '@/components/healthcareCarousal';
 import HealthcareSection from '@/components/healthcare';
-
+import PasskeyModal from '@/components/modal/AdminPasskey';
 const HomePage = () => {
   useEffect(() => {
     // Example: Adjust slider settings based on screen size or other conditions
     // For example, you can dynamically change slidesToShow based on window width
   }, []);
+
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+
+  const handleAdminClick = () => {
+    setIsAdminModalOpen(true);
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white">
@@ -41,7 +50,11 @@ const HomePage = () => {
       </section>
 
       {/* Footer section */}
-      <Footer />
+      <Footer onAdminClick={handleAdminClick} />
+
+      {isAdminModalOpen && (
+        <PasskeyModal onClose={() => setIsAdminModalOpen(false)} />
+      )}
     </div>
   );
 };

@@ -11,7 +11,6 @@ export const addAppointment = async (appointmentData: Partial<IAppointment>): Pr
     const existingAppointment = await Appointment.findOne({
       patientId: appointmentData.patientId,
       primaryPhysician: appointmentData.primaryPhysician,
-      schedule: appointmentData.schedule,
       status: { $ne: 'cancelled' }, // Exclude cancelled appointments
     });
 

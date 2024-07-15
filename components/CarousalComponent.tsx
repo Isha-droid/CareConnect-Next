@@ -1,4 +1,3 @@
-"use client"
 import Link from 'next/link';
 import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
@@ -14,7 +13,7 @@ const CarouselSection = () => {
           infiniteLoop
           showThumbs={false}
           interval={5000}
-          transitionTime={500} // Set transitionTime to 500ms for a smooth slide transition
+          transitionTime={500}
           stopOnHover={false}
           showStatus={false}
           showIndicators={false}
@@ -43,9 +42,9 @@ const CarouselSection = () => {
           </div>
         </Carousel>
         <div className="absolute inset-0 bg-gray-800 bg-opacity-80 flex items-center justify-center">
-          <div className="max-w-lg text-center">
-            <div className="text-5xl text-white">
-              Join Us For 
+          <div className="max-w-4xl mx-auto text-center px-6">
+            <div className="text-5xl font-bold text-white mb-6">
+              Join Us For{' '}
               <Typewriter
                 loop
                 cursor
@@ -55,12 +54,12 @@ const CarouselSection = () => {
                 delaySpeed={1000}
                 words={[' Better Health', ' Happy Days', ' Longer Lives']}
               />
-              <br/>
-
-              <Link href="patients/patient-login" className="inline-block mt-4 px-6 py-3 rounded-md bg-pink-500 text-white text-2xl hover:bg-pink-600 transition duration-300 ease-in-out">
-                Get Started
-              </Link>
             </div>
+            <Link href="/patients/patient-login">
+              <div className="inline-block px-8 py-3 rounded-md bg-pink-500 text-white text-2xl hover:bg-pink-600 transition duration-300 ease-in-out">
+                Get Started
+              </div>
+            </Link>
           </div>
         </div>
       </div>

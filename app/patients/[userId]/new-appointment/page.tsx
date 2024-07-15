@@ -67,7 +67,7 @@ const Appointment = ({ params: { userId } }: SearchParamProps) => {
             <AppointmentForm
               patientId={patientId} // Ensure patientId is a string
               userId={userId}
-              type="cancel"
+              type="create"
             />
           )}
 
