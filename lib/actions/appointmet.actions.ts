@@ -109,3 +109,44 @@ export const updateAppointment = async (
     throw new Error(`Error updating appointment: ${error.message}`);
   }
 };
+
+
+export const getRecentAppointments = async (): Promise<{
+  documents: IAppointment[];
+  completedCount: number;
+  pendingCount: number;
+  cancelledCount: number;
+  totalCount: number;
+}> => {
+  try {
+    // Fetch the appointments sorted by creation date in descending order
+    const appointments = await Appointment.find().sort({ createdAt: -1 }).exec();
+
+    // Calculate the counts for each status
+    const scheduledCount = appointments.filter(
+      (appointment) => appointment.status === "scheduled"
+    ).length;
+    const pendingCount = appointments.filter(
+      (appointment) => appointment.status === "pending"
+    ).length;
+    const cancelledCount = appointments.filter(
+      (appointment) => appointment.status === "cancelled"
+    ).length;
+    const totalCount = appointments.length;
+
+    // Parse the entire appointment objects
+    const data = appointments.map((appointment) => appointment.toObject());
+
+    const obj = {
+      documents: data,
+      scheduledCount,
+      pendingCount,
+      cancelledCount,
+      totalCount,
+    };
+    return JSON.parse(JSON.stringify(obj))
+  } catch (error) {
+    // Handle any errors
+    throw new Error(`Error fetching recent appointments: ${error.message}`);
+  }
+};
