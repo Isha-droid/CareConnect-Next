@@ -104,4 +104,24 @@ const getPatientByEmail = async (email: string): Promise<{ message: string, pati
   }
 };
 
-export { createAuthUser, getAuthUser, savePatientData, getPatientByEmail };
+const getPatientById = async (id: string): Promise<{ message: string, patient?: IPatientRegister }> => {
+  try {
+    // Find patient by ID
+    const patient = await PatientRegister.findById(id);
+
+    if (!patient) {
+      return { message: 'Patient not found' };
+    }
+
+    return {
+      patient: JSON.parse(JSON.stringify(patient)) // Convert Mongoose document to plain JavaScript object
+    };
+
+  } catch (error) {
+    console.error('Error fetching patient data by ID:', error);
+    throw error;
+  }
+};
+
+
+export { createAuthUser, getAuthUser, savePatientData, getPatientByEmail, getPatientById};

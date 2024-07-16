@@ -2,6 +2,7 @@
 import Appointment, { IAppointment } from "@/models/Appointment";
 
 import connectDB from "@/config/dbConnect";
+import { getPatientById } from "./patient.actions";
 
 connectDB();
 
@@ -112,7 +113,7 @@ export const updateAppointment = async (
 
 
 export const getRecentAppointments = async (): Promise<{
-  documents: IAppointment[];
+  documents: any[]; // Update with your actual type if available
   completedCount: number;
   pendingCount: number;
   cancelledCount: number;
@@ -120,31 +121,63 @@ export const getRecentAppointments = async (): Promise<{
 }> => {
   try {
     // Fetch the appointments sorted by creation date in descending order
-    const appointments = await Appointment.find().sort({ createdAt: -1 }).exec();
+    const appointments = await Appointment.find()
+      .sort({ priority: -1, createdAt: -1 })
+      .exec();
 
-    // Calculate the counts for each status
-    const scheduledCount = appointments.filter(
-      (appointment) => appointment.status === "scheduled"
-    ).length;
-    const pendingCount = appointments.filter(
-      (appointment) => appointment.status === "pending"
-    ).length;
-    const cancelledCount = appointments.filter(
-      (appointment) => appointment.status === "cancelled"
-    ).length;
+    // Initialize arrays to store details
+    const appointmentDetails: any[] = [];
+    const patientIds: string[] = [];
+    
+    // Filtered counts initialization
+    let scheduledCount = 0;
+    let pendingCount = 0;
+    let cancelledCount = 0;
+
+    // Extracting patient ids from appointments
+    appointments.forEach(appointment => {
+        const {patientId} = appointment;
+        if (!patientIds.includes(patientId)) {
+            patientIds.push(patientId);
+        }
+    });
+
+    // Fetching patient details asynchronously
+    const patientDetails = await Promise.all(patientIds.map(async (id) => {
+        // Replace this with your actual logic to fetch patient details
+        const patient = await getPatientById(id); // Example function to fetch patient details
+        return { [id]: patient }; // Assuming fetchPatientDetails returns the patient object
+    }));
+
+    // Mapping appointments with patient details and calculating counts
+    appointments.forEach(appointment => {
+        const { patientId, priority, status } = appointment;
+        const patientDetail = patientDetails.find(pd => pd[patientId]);
+        const formattedAppointment = {
+            ...appointment.toObject(),
+            patient: patientDetail[patientId],
+        };
+        appointmentDetails.push(formattedAppointment);
+
+        // Counting based on status
+        if (status === 'scheduled') {
+            scheduledCount++;
+        } else if (status === 'pending') {
+            pendingCount++;
+        } else if (status === 'cancelled') {
+            cancelledCount++;
+        }
+    });
+
     const totalCount = appointments.length;
 
-    // Parse the entire appointment objects
-    const data = appointments.map((appointment) => appointment.toObject());
-
-    const obj = {
-      documents: data,
+    return {
+      documents: appointmentDetails,
       scheduledCount,
       pendingCount,
       cancelledCount,
       totalCount,
     };
-    return JSON.parse(JSON.stringify(obj))
   } catch (error) {
     // Handle any errors
     throw new Error(`Error fetching recent appointments: ${error.message}`);

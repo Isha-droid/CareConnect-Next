@@ -32,6 +32,7 @@ const AdminPasskeyModal = ({ onClose }) => {
 
     if (accessKey === "123456") {
       onClose();
+      alert("pushing to admin")
       router.push("/admin");
     }
   }, [encryptedKey]);
