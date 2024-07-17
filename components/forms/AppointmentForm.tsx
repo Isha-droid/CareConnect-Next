@@ -5,7 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import {
   addAppointment,
   fetchPendingAppointments,
@@ -75,6 +75,7 @@ const AppointmentForm: React.FC<{
   patientId: string;
   type: "create" | "cancel" | "schedule";
   appointment?: IAppointment;
+  appointmentId?: string,
 }> = ({ userId, patientId, type, appointment }) => {
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -118,18 +119,58 @@ const AppointmentForm: React.FC<{
       fetchAppointments();
     }
   }, [userId, type]);
+ 
+  
+  const handleSchedule = async (formData: AppointmentFormData) => {
+    try {
+      const { cancellationReason, note, primaryPhysician, priority, reason, schedule } = formData;
+  
+      // Example: Fetch appointmentId from your context or state
+  
+      // Ensure appointmentId and updatedFields are correctly populated from your form data
+      const updatedFields = {
+        cancellationReason,
+        note,
+        primaryPhysician,
+        priority,
+        reason,
+        schedule,
+        status: 'scheduled', // Adding status as 'scheduled'
+      };
+      const appointmentId= appointment?._id;
+      
+      console.log(appointmentId)
+      // Call updateAppointment with appointmentId and updatedFields
+      const updatedAppointment = await updateAppointment(appointmentId, updatedFields);
+  
+      console.log('Updated Appointment:', updatedAppointment);
+      toast.success("appointment scheduled successfully")
+      router.push("http://localhost:3000/admin")
+    } catch (error) {
+      console.error('Error scheduling appointment:', error);
+      // Handle error state or display error message
+    }
+  };
+  
 
   const onSubmit = async (data: AppointmentFormData) => {
     try {
-      const newAppointment = await addAppointment({
-        ...data,
-        userId,
-        patientId,
-      });
-      toast.success("Appointment added successfully");
-      router.push(
-        `/patients/${userId}/new-appointment/success?appointmentId=${newAppointment._id}`
-      );
+
+      if(type=="schedule"){
+        handleSchedule(data);
+        
+      }else{
+
+        const newAppointment = await addAppointment({
+          ...data,
+          userId,
+          patientId,
+        });
+        toast.success("Appointment added successfully");
+        router.push(
+          `/patients/${userId}/new-appointment/success?appointmentId=${newAppointment._id}`
+        );
+      }
     } catch (error) {
       console.error("Error adding appointment:", error.message);
       toast.error("Failed to add appointment");

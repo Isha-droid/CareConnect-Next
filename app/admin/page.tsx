@@ -32,7 +32,7 @@ const appointments= await getRecentAppointments();
         <section className="flex space-x-4">
           <StatCard
             type="appointments"
-            count={appointments.completedCount}
+            count={appointments.scheduledCount}
             label="Scheduled appointments"
             icon={"/assets/icons/appointments.svg"}
             className="bg-gray-700 text-pink-500 p-4 rounded-md shadow-md"

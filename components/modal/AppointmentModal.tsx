@@ -78,6 +78,7 @@ export const AppointmentModal = ({
           userId={userId}
           patientId={patientId}
           type={type}
+          appointment={appointment}
         />
       </DialogContent>
     </Dialog>
