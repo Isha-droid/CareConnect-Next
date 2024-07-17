@@ -45,9 +45,9 @@ const getAppointmentSchema = (type: "create" | "cancel" | "schedule") =>
         ? z.string().nonempty("Reason is required")
         : z.string().optional(),
     note:
-      type === "create" || type === "schedule"
+      type === "create"
         ? z.string().optional()
-        : z.string().optional(),
+        : z.string().nullish("Note is not allowed"),
     cancellationReason:
       type === "cancel"
         ? z.string().nonempty("Cancellation reason is required")
@@ -78,9 +78,9 @@ const AppointmentForm: React.FC<{
 }> = ({ userId, patientId, type, appointment }) => {
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(
-    null
-  );
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+    string | null
+  >(null);
   const [cancellationReason, setCancellationReason] = useState<string>("");
 
   const AppointmentFormValidation = getAppointmentSchema(type);
@@ -153,7 +153,9 @@ const AppointmentForm: React.FC<{
       }
 
       setAppointments((prevAppointments) =>
-        prevAppointments.filter((appointment) => appointment._id !== appointmentId)
+        prevAppointments.filter(
+          (appointment) => appointment._id !== appointmentId
+        )
       );
 
       setCancellationReason("");
@@ -184,9 +186,15 @@ const AppointmentForm: React.FC<{
                 <table className="table-auto min-w-full divide-y divide-gray-700">
                   <thead>
                     <tr className="bg-gray-800 text-white">
-                      <th className="border border-gray-700 px-4 py-2">Physician</th>
-                      <th className="border border-gray-700 px-4 py-2">Schedule</th>
-                      <th className="border border-gray-700 px-4 py-2">Reason</th>
+                      <th className="border border-gray-700 px-4 py-2">
+                        Physician
+                      </th>
+                      <th className="border border-gray-700 px-4 py-2">
+                        Schedule
+                      </th>
+                      <th className="border border-gray-700 px-4 py-2">
+                        Reason
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -194,7 +202,9 @@ const AppointmentForm: React.FC<{
                       <tr
                         key={appointment._id}
                         className={`bg-gray-700 text-white cursor-pointer ${
-                          selectedAppointmentId === appointment._id ? "bg-gray-600" : ""
+                          selectedAppointmentId === appointment._id
+                            ? "bg-gray-600"
+                            : ""
                         }`}
                         onClick={() =>
                           handleRowClick(
@@ -263,15 +273,23 @@ const AppointmentForm: React.FC<{
         >
           <div className="space-y-4">
             <h1 className="text-2xl text-pink-500">
-              {type === "create" ? "Create an Appointment" : "Schedule an Appointment"}
+              {type === "create"
+                ? "Create an Appointment"
+                : "Schedule an Appointment"}
             </h1>
 
             <CustomFormField error={errors.primaryPhysician}>
-              <input
+              <select
                 {...register("primaryPhysician")}
-                placeholder="Doctor"
                 className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-              />
+              >
+                <option value="">Select a doctor</option>
+                {Doctors.map((doctor, index) => (
+                  <option key={index} value={doctor.name}>
+                    {doctor.name}
+                  </option>
+                ))}
+              </select>
             </CustomFormField>
 
             <CustomFormField error={errors.priority}>
@@ -302,7 +320,7 @@ const AppointmentForm: React.FC<{
               />
             </CustomFormField>
 
-            {(type === "create" || type === "schedule") && (
+            {type === "create" && type === "schedule" && (
               <CustomFormField error={errors.note}>
                 <textarea
                   {...register("note")}
