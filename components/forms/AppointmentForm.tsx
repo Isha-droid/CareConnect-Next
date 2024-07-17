@@ -12,6 +12,7 @@ import {
   updateAppointment,
 } from "@/lib/actions/appointmet.actions";
 import { Doctors } from "@/constants";
+import { IAppointment } from "@/models/Appointment";
 
 interface Appointment {
   _id: string;
@@ -34,16 +35,19 @@ interface AppointmentFormData {
   cancellationReason?: string;
 }
 
-const getAppointmentSchema = (type: "create" | "cancel") =>
+const getAppointmentSchema = (type: "create" | "cancel" | "schedule") =>
   z.object({
     primaryPhysician: z.string().nonempty("Doctor is required"),
     priority: z.enum(["normal", "urgent"]),
     schedule: z.date(),
     reason:
-      type === "create"
+      type === "create" || type === "schedule"
         ? z.string().nonempty("Reason is required")
         : z.string().optional(),
-    note: type === "create" ? z.string().optional() : z.string().optional(),
+    note:
+      type === "create" || type === "schedule"
+        ? z.string().optional()
+        : z.string().optional(),
     cancellationReason:
       type === "cancel"
         ? z.string().nonempty("Cancellation reason is required")
@@ -69,8 +73,9 @@ const SubmitButton: React.FC<{ isLoading: boolean }> = ({
 const AppointmentForm: React.FC<{
   userId: string;
   patientId: string;
-  type: "create" | "cancel";
-}> = ({ userId, patientId, type }) => {
+  type: "create" | "cancel" | "schedule";
+  appointment?: IAppointment;
+}> = ({ userId, patientId, type, appointment }) => {
   const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(
@@ -89,11 +94,11 @@ const AppointmentForm: React.FC<{
   } = useForm<AppointmentFormData>({
     resolver: zodResolver(AppointmentFormValidation),
     defaultValues: {
-      primaryPhysician: "",
-      priority: "normal",
-      schedule: new Date(),
-      reason: "",
-      note: "",
+      primaryPhysician: appointment ? appointment.primaryPhysician : "",
+      priority: appointment ? appointment.priority : "normal",
+      schedule: appointment ? new Date(appointment.schedule) : new Date(),
+      reason: appointment ? appointment.reason : "",
+      note: appointment ? appointment.note : "",
       cancellationReason: "",
     },
   });
@@ -125,7 +130,6 @@ const AppointmentForm: React.FC<{
       router.push(
         `/patients/${userId}/new-appointment/success?appointmentId=${newAppointment._id}`
       );
-
     } catch (error) {
       console.error("Error adding appointment:", error.message);
       toast.error("Failed to add appointment");
@@ -137,26 +141,21 @@ const AppointmentForm: React.FC<{
     cancellationReason: string
   ) => {
     try {
-      // Update appointment with cancellation reason and status
-      const updatedUser=await updateAppointment(appointmentId, {
+      const updatedUser = await updateAppointment(appointmentId, {
         cancellationReason,
         status: "cancelled",
       });
 
-      // Handle UI updates or notifications (e.g., toast notifications)
       if (updatedUser) {
         toast.success(
           `Appointment with ID ${appointmentId} cancelled successfully`
         );
       }
-      
 
-      // Remove cancelled appointment from state or UI list
       setAppointments((prevAppointments) =>
         prevAppointments.filter((appointment) => appointment._id !== appointmentId)
       );
 
-      // Reset cancellation reason form field (if using a form library like react-hook-form)
       setCancellationReason("");
     } catch (error) {
       console.error("Error cancelling appointment:", error.message);
@@ -182,43 +181,42 @@ const AppointmentForm: React.FC<{
             <div className="mt-4">
               <h2 className="text-xl text-white mb-2">Pending Appointments</h2>
               <div className="overflow-x-auto">
-  <table className="table-auto min-w-full divide-y divide-gray-700">
-    <thead>
-      <tr className="bg-gray-800 text-white">
-        <th className="border border-gray-700 px-4 py-2">Physician</th>
-        <th className="border border-gray-700 px-4 py-2">Schedule</th>
-        <th className="border border-gray-700 px-4 py-2">Reason</th>
-      </tr>
-    </thead>
-    <tbody>
-      {appointments.map((appointment) => (
-        <tr
-          key={appointment._id}
-          className={`bg-gray-700 text-white cursor-pointer ${
-            selectedAppointmentId === appointment._id ? "bg-gray-600" : ""
-          }`}
-          onClick={() =>
-            handleRowClick(
-              appointment._id,
-              appointment.cancellationReason || ""
-            )
-          }
-        >
-          <td className="border border-gray-700 px-4 py-2">
-            {appointment.primaryPhysician}
-          </td>
-          <td className="border border-gray-700 px-4 py-2">
-            {new Date(appointment.schedule).toLocaleString()}
-          </td>
-          <td className="border border-gray-700 px-4 py-2">
-            {appointment.reason}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
+                <table className="table-auto min-w-full divide-y divide-gray-700">
+                  <thead>
+                    <tr className="bg-gray-800 text-white">
+                      <th className="border border-gray-700 px-4 py-2">Physician</th>
+                      <th className="border border-gray-700 px-4 py-2">Schedule</th>
+                      <th className="border border-gray-700 px-4 py-2">Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appointments.map((appointment) => (
+                      <tr
+                        key={appointment._id}
+                        className={`bg-gray-700 text-white cursor-pointer ${
+                          selectedAppointmentId === appointment._id ? "bg-gray-600" : ""
+                        }`}
+                        onClick={() =>
+                          handleRowClick(
+                            appointment._id,
+                            appointment.cancellationReason || ""
+                          )
+                        }
+                      >
+                        <td className="border border-gray-700 px-4 py-2">
+                          {appointment.primaryPhysician}
+                        </td>
+                        <td className="border border-gray-700 px-4 py-2">
+                          {new Date(appointment.schedule).toLocaleString()}
+                        </td>
+                        <td className="border border-gray-700 px-4 py-2">
+                          {appointment.reason}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
             <p>No pending appointments to cancel.</p>
@@ -256,68 +254,68 @@ const AppointmentForm: React.FC<{
         </div>
       )}
 
-      {type === "create" && (
+      {(type === "create" || type === "schedule") && (
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="p-6 bg-gray-800 text-white space-y-6"
+          className={`p-6 bg-gray-800 text-white space-y-6 ${
+            type === "schedule" ? "scrollable-form" : ""
+          }`}
         >
           <div className="space-y-4">
-            <h1 className="text-2xl text-pink-500">New Appointment</h1>
-            <p className="text-gray-400">Request a new appointment.</p>
+            <h1 className="text-2xl text-pink-500">
+              {type === "create" ? "Create an Appointment" : "Schedule an Appointment"}
+            </h1>
+
+            <CustomFormField error={errors.primaryPhysician}>
+              <input
+                {...register("primaryPhysician")}
+                placeholder="Doctor"
+                className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+              />
+            </CustomFormField>
+
+            <CustomFormField error={errors.priority}>
+              <select
+                {...register("priority")}
+                className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+              >
+                <option value="normal">Normal</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </CustomFormField>
+
+            <CustomFormField error={errors.schedule}>
+              <DatePicker
+                selected={watch("schedule")}
+                onChange={(date) => setValue("schedule", date || new Date())}
+                showTimeSelect
+                dateFormat="Pp"
+                className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+              />
+            </CustomFormField>
+
+            <CustomFormField error={errors.reason}>
+              <textarea
+                {...register("reason")}
+                placeholder="Reason"
+                className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+              />
+            </CustomFormField>
+
+            {(type === "create" || type === "schedule") && (
+              <CustomFormField error={errors.note}>
+                <textarea
+                  {...register("note")}
+                  placeholder="Note"
+                  className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
+                />
+              </CustomFormField>
+            )}
           </div>
 
-          <CustomFormField error={errors.primaryPhysician}>
-            <select
-              {...register("primaryPhysician")}
-              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-            >
-              <option value="">Select a doctor</option>
-              {/* Assuming doctors is an array of available doctors */}
-              {Doctors.map((doctor, index) => (
-                <option key={index} value={doctor.name}>
-                  {doctor.name}
-                </option>
-              ))}
-            </select>
-          </CustomFormField>
-
-          <CustomFormField error={errors.priority}>
-            <select
-              {...register("priority")}
-              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-            >
-              <option value="normal">Normal</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </CustomFormField>
-
-          <CustomFormField error={errors.schedule}>
-            <DatePicker
-              selected={watch("schedule")}
-              onChange={(date) => setValue("schedule", date)}
-              showTimeSelect
-              dateFormat="MM/dd/yyyy h:mm aa"
-              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-            />
-          </CustomFormField>
-
-          <CustomFormField error={errors.reason}>
-            <textarea
-              {...register("reason")}
-              placeholder="Reason for appointment"
-              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-            />
-          </CustomFormField>
-
-          <CustomFormField error={errors.note}>
-            <textarea
-              {...register("note")}
-              placeholder="Additional notes (optional)"
-              className="w-full p-4 bg-gray-700 text-white border border-pink-500 rounded focus:outline-none"
-            />
-          </CustomFormField>
-
-          <SubmitButton isLoading={false}>Request Appointment</SubmitButton>
+          <SubmitButton isLoading={false}>
+            {type === "create" ? "Create Appointment" : "Schedule Appointment"}
+          </SubmitButton>
         </form>
       )}
     </div>
