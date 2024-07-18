@@ -9,8 +9,8 @@ const Register = async ({ params: { userId } }: SearchParamProps) => {
   const patient = await getAuthUser(userId);
   console.log(patient)
   if(patient?.registered){
-    alert("you have registered successfully")
-    redirect(`/`);
+    redirect(`/patients/${patient._id}/new-appointment`);
+
   }
 
 

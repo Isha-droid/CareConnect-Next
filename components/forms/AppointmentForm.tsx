@@ -114,12 +114,18 @@ const AppointmentForm: React.FC<{
         toast.error("Failed to fetch pending appointments");
       }
     };
-
+  
     if (type === "cancel") {
-      fetchAppointments();
+      if (appointment && !Array.isArray(appointment)) {
+        // Convert appointment to array if it's not already an array
+        const appointmentArray = [appointment];
+        setAppointments(appointmentArray);
+      } else {
+        fetchAppointments();
+      }
     }
-  }, [userId, type]);
- 
+  }, [userId, type, appointment]); // Ensure to include appointment in dependencies array
+  
   
   const handleSchedule = async (formData: AppointmentFormData) => {
     try {

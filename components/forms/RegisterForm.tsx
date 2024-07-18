@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 import { savePatientData } from '@/lib/actions/patient.actions';
 import { IPatientRegister } from "@/models/PatientRegister"; // Adjust the path as per your project structure
 import { toast } from 'react-hot-toast';
+import { CldUploadWidget } from 'next-cloudinary';
+
 
 const schema = z.object({
   email: z.string().email({ message: 'Invalid email address' }).min(1, { message: 'Email is required' }),
@@ -80,6 +82,7 @@ const RegisterForm = ({ user }: { user: User }) => {
       setIsLoading(true); // Set loading state to true during form submission
   
       let formData: FormData | undefined;
+      console.log(values.identificationDocument)
   
       // Check if identificationDocument is provided and create FormData for file upload
       
@@ -105,7 +108,7 @@ const RegisterForm = ({ user }: { user: User }) => {
         identificationType: values.identificationType,
         identificationNo: values.identificationNo,
         identificationDocumentId: values.identificationDocumentId,
-        identificationDocument:"",
+        identificationDocument:values.identificationDocument,
       };
   
       console.log('Patient Data:', patientData); // Debugging output
@@ -299,7 +302,6 @@ const RegisterForm = ({ user }: { user: User }) => {
         render={({ field }) => (
           <CustomFormField
             fieldType="file"
-            control={control}
             name="identificationDocument"
             label="Scanned Copy of Identification Document"
             renderSkeleton={() => (
@@ -313,7 +315,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           />
         )}
       />
-      
+
       
 
       <div className="mb-4">

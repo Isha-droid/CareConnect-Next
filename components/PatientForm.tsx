@@ -35,13 +35,15 @@ export default function PatientFrom() {
   
       const user= await createAuthUser(name, email, phone);
 
-      if (user.message == "User already exists" && user.patient) {
+      if (user.message == "User already exists" && user.patient.registered) {
         toast.error(user.message);
         router.push(`/patients/${user.patient._id}/new-appointment`);
       } 
   
-      if (user.message == "User already exists") {
+      if (user.message == "User already exists" && !user.registered) {
         toast.error(user.message);
+        router.push(`/patients/${user.patient._id}/register`);
+
       } 
       
         else {
