@@ -122,6 +122,47 @@ const getPatientById = async (id: string): Promise<{ message: string, patient?: 
     throw error;
   }
 };
+const updatePatientData = async (id: string, updatedData: Partial<IPatientRegister>): Promise<{ message: string, patient?: IPatientRegister }> => {
+  try {
+    // Find the current patient data
+    const currentPatient = await PatientRegister.findById(id);
+    if (!currentPatient) {
+      return { message: 'Patient not found' };
+    }
+
+    // Exclude fields that should not be updated
+    const { name, email, phone, ...updatableFields } = updatedData;
+
+    // Update only allowed fields
+    const updatedPatient = await PatientRegister.findByIdAndUpdate(id, updatableFields, { new: true });
+
+    if (!updatedPatient) {
+      return { message: 'Patient update failed' };
+    }
+
+    // Update the Auth document if email or phone is updated
+    if (email || phone) {
+      const updatedAuthUser = await Authe.findOneAndUpdate(
+        { email: currentPatient.email },
+        { $set: { email: email ?? currentPatient.email, phone: phone ?? currentPatient.phone } },
+        { new: true }
+      );
+
+      if (!updatedAuthUser) {
+        console.log('Auth user not found for email:', currentPatient.email);
+      }
+    }
+
+    return {
+      message: 'Patient updated successfully!',
+      patient: JSON.parse(JSON.stringify(updatedPatient)) // Convert Mongoose document to plain JavaScript object
+    };
+
+  } catch (error) {
+    console.error('Error updating patient data:', error);
+    throw error;
+  }
+};
 
 
-export { createAuthUser, getAuthUser, savePatientData, getPatientByEmail, getPatientById};
+export { createAuthUser, getAuthUser, savePatientData, getPatientByEmail, getPatientById, updatePatientData};
