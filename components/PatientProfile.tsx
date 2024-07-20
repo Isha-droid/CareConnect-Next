@@ -1,5 +1,6 @@
 "use client";
 import { FC } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FaPhone, FaBirthdayCake, FaGenderless, FaInfoCircle, FaUser } from 'react-icons/fa';
 import { IPatientRegister } from '../models/PatientRegister';
@@ -9,6 +10,16 @@ interface PatientProfileProps {
 }
 
 const PatientProfile: FC<PatientProfileProps> = ({ patient }) => {
+  const router = useRouter();
+
+  const handleUpdateProfile = () => {
+    if (patient) {
+      const serializedPatient = encodeURIComponent(JSON.stringify(patient));
+      router.push(`/patients/${patient._id}/update-profile?patient=${serializedPatient}`);
+    }
+  };
+
+
   if (!patient) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white">
@@ -103,8 +114,18 @@ const PatientProfile: FC<PatientProfileProps> = ({ patient }) => {
           </div>
         </div>
 
+        {/* Update Profile Button */}
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={handleUpdateProfile}
+            className="bg-pink-500 text-white py-2 px-4 rounded-lg hover:bg-pink-700 transition-colors duration-300"
+          >
+            Update Profile
+          </button>
+        </div>
+
         {/* Quotes Section */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg text-center mt-8">
           <blockquote className="italic text-lg mb-4">
             <p>"The greatest wealth is health."</p>
           </blockquote>
