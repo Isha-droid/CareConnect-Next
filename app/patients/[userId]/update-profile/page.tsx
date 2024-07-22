@@ -6,6 +6,9 @@ import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FileUploader } from '@/components/forms/FileUpload'; // Ensure this component is updated
+import CustomFormField from '@/components/CustomFormField';
+import { updatePatientData } from '@/lib/actions/patient.actions';
+import toast from "react-hot-toast";
 
 // Define your Zod schema
 const schema = z.object({
@@ -29,13 +32,15 @@ type FormData = z.infer<typeof schema>;
 const UpdateProfile: React.FC = () => {
   const searchParams = useSearchParams();
   const [patient, setPatient] = useState<FormData | null>(null);
-  console.log(patient)
+  const [patientId, setPatientId] = useState<string | null>(null);
+
 
   // Initialize form with useForm and Zod resolver
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: patient || {}
   });
+  var id;
 
   useEffect(() => {
     const patientParam = searchParams.get('patient');
@@ -44,6 +49,8 @@ const UpdateProfile: React.FC = () => {
         const decodedPatient = JSON.parse(decodeURIComponent(patientParam)) as FormData;
         setPatient(decodedPatient);
         // Set default values for the form
+        setPatientId(decodedPatient._id)
+
         Object.keys(decodedPatient).forEach((key) => {
           setValue(key as keyof FormData, decodedPatient[key]);
         });
@@ -53,14 +60,38 @@ const UpdateProfile: React.FC = () => {
     }
   }, [searchParams, setValue]);
 
-  const handleFileChange = (file: File) => {
-    setValue('identificationDocument', file);
-  };
+ 
 
-  const handleSubmitForm = (data: FormData) => {
-    // Handle form submission logic
-    console.log('Updated patient data:', data);
-  };
+
+const handleSubmitForm = async (data: FormData) => {
+  try {
+    // Assume `id` is available from the context or props
+    console.log("clicking form...")
+      const updatedData: Partial<FormData> = {
+      birthDate: data.birthDate,
+      gender: data.gender,
+      address: data.address,
+      occupation: data.occupation,
+      emergencyContactName: data.emergencyContactName,
+      emergencyContactNumber: data.emergencyContactNumber,
+      insuranceProvider: data.insuranceProvider,
+      insurancePolicyNumber: data.insurancePolicyNumber,
+      allergies: data.allergies,
+      currentMedication: data.currentMedication,
+      familyMedicalHistory: data.familyMedicalHistory,
+      pastMedicalHistory: data.pastMedicalHistory,
+      identificationDocument: data.identificationDocument, // Handle file data appropriately
+    };
+
+    // Call the updatePatientData function
+    const response = await updatePatientData(patientId, updatedData);
+
+    toast.success(response.message);
+  } catch (error) {
+    console.error('Error during form submission:', error);
+  }
+};
+
 
   if (!patient) {
     return (
@@ -323,20 +354,25 @@ const UpdateProfile: React.FC = () => {
           </div>
 
           {/* File Upload Card */}
-          <div className="bg-gray-800 text-white p-4 rounded-lg shadow-md mt-6">
-            <h3 className="text-2xl mb-4 text-white">Identification Document</h3>
-            <Controller
-              name="identificationDocument"
-              control={control}
-              render={({ field }) => (
-                <FileUploader
-                  onChange={handleFileChange}
-                  file={field.value}
-                />
-              )}
-            />
-            {errors.identificationDocument && <p className="text-red-500 text-sm mt-1">{errors.identificationDocument.message}</p>}
-          </div>
+          <Controller
+        name="identificationDocument"
+        control={control}
+        render={({ field }) => (
+          <CustomFormField
+            fieldType="file"
+            name="identificationDocument"
+            label="Scanned Copy of Identification Document"
+            renderSkeleton={() => (
+              <div>
+                <FileUploader files={field.value} onChange={field.onChange} />
+                {errors.identificationDocument && (
+                  <p className="text-red-500 text-sm mt-1">{errors.identificationDocument.message}</p>
+                )}
+              </div>
+            )}
+          />
+        )}
+      />
 
           {/* Submit Button */}
           <div className="flex justify-center mt-8">

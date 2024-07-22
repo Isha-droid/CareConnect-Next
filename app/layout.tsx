@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "react-hot-toast";
 import Navbar from "@/components/Navbar";
 
-
 const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -35,8 +34,9 @@ export default function RootLayout({
           className={cn(
             "min-h-screen bg-dark-300 font-sans antialiased"
           )}
-        >
+          >
         <Toaster position="bottom-center" />
+          <Navbar/>
 
           {children}
         </body>
