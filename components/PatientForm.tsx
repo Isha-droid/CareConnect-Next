@@ -37,17 +37,23 @@ export default function PatientFrom() {
 
       if (user.message == "User already exists" && user.patient.registered) {
         toast.error(user.message);
+        localStorage.setItem("userId", user.patient._id); // Store userId in local storage
+
         router.push(`/patients/${user.patient._id}/new-appointment`);
       } 
   
       if (user.message == "User already exists" && !user.registered) {
         toast.error(user.message);
+        localStorage.setItem("userId", user.patient._id); // Store userId in local storage
+
         router.push(`/patients/${user.patient._id}/register`);
 
       } 
       
         else {
         toast.success(user.message);
+        localStorage.setItem("userId", user.patient._id); // Store userId in local storage
+
         router.push(`/patients/${user.patient._id}/register`);
       }
     } catch (error) {
