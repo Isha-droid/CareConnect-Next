@@ -5,7 +5,7 @@ import { useDropzone } from "react-dropzone";
 import cloudinaryUpload from "@/lib/utils/cloudinaryUpload";
 
 type FileUploaderProps = {
-  files: string | undefined;
+  files?: string; // Optional, default value should be handled within the component
   onChange: (fileUrl: string) => void;
 };
 
@@ -17,7 +17,11 @@ export const FileUploader = ({ files, onChange }: FileUploaderProps) => {
       setUploading(true);
       try {
         const uploadedImageUrl = await cloudinaryUpload(acceptedFiles[0]);
-        onChange(uploadedImageUrl);
+        if (typeof onChange === 'function') {
+          onChange(uploadedImageUrl);
+        } else {
+          console.error("onChange is not a function");
+        }
       } catch (error) {
         console.error("Error uploading image:", error);
       } finally {
@@ -29,10 +33,10 @@ export const FileUploader = ({ files, onChange }: FileUploaderProps) => {
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
-    <div {...getRootProps()} className="file-upload">
+    <div {...getRootProps()} className="file-upload border border-dashed border-gray-600 p-4 rounded-lg">
       <input {...getInputProps()} />
       {uploading ? (
-        <p>Uploading...</p>
+        <p className="text-white">Uploading...</p>
       ) : files ? (
         <Image
           src={files}
@@ -49,12 +53,12 @@ export const FileUploader = ({ files, onChange }: FileUploaderProps) => {
             height={40}
             alt="upload"
           />
-          <div className="file-upload_label">
-            <p className="text-14-regular">
+          <div className="file-upload_label mt-2 text-center">
+            <p className="text-14-regular text-white">
               <span className="text-green-500">Click to upload </span>
               or drag and drop
             </p>
-            <p className="text-12-regular">
+            <p className="text-12-regular text-gray-400">
               SVG, PNG, JPG or GIF (max. 800x400px)
             </p>
           </div>

@@ -4,6 +4,7 @@ import { FaUserMd } from "react-icons/fa"; // Importing the doctor icon
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils";
 import { getAppointmentById } from "@/lib/actions/appointmet.actions";
+// import sendMessage from "@/app/pages/sendMessage";
 
 const RequestSuccess = async ({
   searchParams,
@@ -17,6 +18,7 @@ const RequestSuccess = async ({
   }
 
   const doctor = appointments.primaryPhysician;
+  // sendMessage("9284342173","hello world")
 
   return (
     <div className="flex h-screen max-h-screen px-[5%] bg-gray-800 text-white">
