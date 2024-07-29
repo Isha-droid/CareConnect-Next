@@ -1,6 +1,6 @@
 # 🏥 Real-Time Healthcare Application
 
-Welcome to the Real-Time Healthcare Application! This project is built using Next.js, Docker, MongoDB, Twilio, and Sentry. It provides a robust platform for managing healthcare services, including real-time patient-doctor interactions and appointment scheduling.
+Welcome to the Real-Time Healthcare Application! This project is built using Next.js, Docker, MongoDB, Twilio, and Sentry. It provides a robust platform for managing healthcare services, including real-time patient-doctor interactions and appointment scheduling..
 
 ![Healthcare Banner](https://source.unsplash.com/random/800x200?healthcare)
 
