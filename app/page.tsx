@@ -14,33 +14,33 @@ import { Socket, io } from "socket.io-client"
 
 const PORT = 2999
 
-function socketClient() {
-  const socket = io(`:${PORT + 1}`, { path: "/api/socket/page", addTrailingSlash: false })
+// function socketClient() {
+//   const socket = io(`:${PORT + 1}`, { path: "/api/socket/page", addTrailingSlash: false })
 
-  socket.on("connect", () => {
-    console.log("Connected")
-  })
+//   socket.on("connect", () => {
+//     console.log("Connected")
+//   })
 
-  socket.on("disconnect", () => {
-    console.log("Disconnected")
-  })
+//   socket.on("disconnect", () => {
+//     console.log("Disconnected")
+//   })
 
-  socket.on("connect_error", async err => {
-    console.log(`connect_error due to ${err.message}`)
-    await fetch("/api/socket")
-  })
+//   socket.on("connect_error", async err => {
+//     console.log(`connect_error due to ${err.message}`)
+//     await fetch("/api/socket")
+//   })
 
-  return socket
-}
+//   return socket
+// }
 
 const HomePage: React.FC = () => {
-  useEffect(() => {
-    const socket = socketClient();
+  // useEffect(() => {
+  //   const socket = socketClient();
 
-    return () => {
-      socket.disconnect(); // Clean up the socket connection when the component unmounts
-    }
-  }, []);
+  //   return () => {
+  //     socket.disconnect(); // Clean up the socket connection when the component unmounts
+  //   }
+  // }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white">
