@@ -110,20 +110,16 @@ export const updateAppointment = async (
     throw new Error(`Error updating appointment: ${error.message}`);
   }
 };
-
-
 export const getRecentAppointments = async (): Promise<{
   documents: any[]; // Update with your actual type if available
-  completedCount: number;
+  scheduledCount: number;
   pendingCount: number;
   cancelledCount: number;
   totalCount: number;
 }> => {
   try {
-    // Fetch the appointments sorted by creation date in descending order
-    const appointments = await Appointment.find()
-      .sort({ priority: -1, createdAt: -1 })
-      .exec();
+    // Fetch all appointments
+    const appointments = await Appointment.find().exec();
 
     // Initialize arrays to store details
     const appointmentDetails: any[] = [];
@@ -146,16 +142,31 @@ export const getRecentAppointments = async (): Promise<{
     const patientDetails = await Promise.all(patientIds.map(async (id) => {
         // Replace this with your actual logic to fetch patient details
         const patient = await getPatientById(id); // Example function to fetch patient details
-        return { [id]: patient }; // Assuming fetchPatientDetails returns the patient object
+        return { [id]: patient }; // Assuming getPatientById returns the patient object
     }));
 
+    // Map patientDetails to easily find them by id
+    const patientDetailMap = patientDetails.reduce((acc, curr) => {
+        const id = Object.keys(curr)[0];
+        acc[id] = curr[id];
+        return acc;
+    }, {} as Record<string, any>);
+
+    // Prioritize urgent and not done appointments
+    const urgentFirstAppointments = appointments
+      .sort((a, b) => {
+        if (a.priority === "urgent" && a.status !== "done") return -1;
+        if (b.priority === "urgent" && b.status !== "done") return 1;
+        return b.createdAt.getTime() - a.createdAt.getTime(); // Sort by creation date
+      });
+
     // Mapping appointments with patient details and calculating counts
-    appointments.forEach(appointment => {
-        const { patientId, priority, status } = appointment;
-        const patientDetail = patientDetails.find(pd => pd[patientId]);
+    urgentFirstAppointments.forEach(appointment => {
+        const { patientId, status } = appointment;
+        const patientDetail = patientDetailMap[patientId];
         const formattedAppointment = {
             ...appointment.toObject(),
-            patient: patientDetail[patientId],
+            patient: patientDetail,
         };
         appointmentDetails.push(formattedAppointment);
 
@@ -181,5 +192,6 @@ export const getRecentAppointments = async (): Promise<{
   } catch (error) {
     // Handle any errors
     throw new Error(`Error fetching recent appointments: ${error.message}`);
-  }
+  } 
 };
+
